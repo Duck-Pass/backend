@@ -1,7 +1,7 @@
-from .database import *
 from fastapi import FastAPI, Request, HTTPException
 from starlette.responses import RedirectResponse
-
+from .database import *
+from .utils import byteaToText
 
 """
     Handle 404 error and redirect to custom 404 page
@@ -31,3 +31,18 @@ def createNewUser(username: str, email: str, key_hash: str, symmetric_key_encryp
     user_data = (username, email, key_hash, symmetric_key_encrypted, two_factor_auth, vault_password)
     insertUpdateDeleteRequest(insertUser(), user_data)
     return {"message": "User created successfully"}
+
+
+"""
+    Select user in database
+    @param email: str
+    @return user: User
+"""
+@app.get("/get_user/")
+async def getUser(email: str):
+    user_data = (email,)
+    user = selectRequest(selectUser(), user_data)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    user = user[:-1] + (byteaToText(user[-1]),)
+    return user
