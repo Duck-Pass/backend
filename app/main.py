@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from starlette.responses import RedirectResponse
 from .auth import *
+from .twoFactorAuth import *
 
 """
     Handle 404 error and redirect to custom 404 page
@@ -87,3 +88,55 @@ def getTokenExpDate(token: str = Depends(oauth2_scheme)):
     decoded_token = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     expiration_timestamp = decoded_token['exp']
     return {"exp": expiration_timestamp}
+
+
+@app.get("/generate_auth_key/", response_model=AuthKey)
+async def generateAuthKey(
+    current_user: Annotated[User, Depends(getCurrentUserFromToken)]
+):
+
+    if current_user[5] != "0":
+        raise HTTPException(status_code=400, detail="Two-factor authentication is already enabled")
+
+    return {"authKey": generateSecret()}
+
+
+@app.post("/enable_two_factor_auth/")
+async def enableTwoFactorAuth(
+    current_user: Annotated[User, Depends(getCurrentUserFromToken)],
+    auth_key: str,
+    totp_code: str
+):
+    if current_user[5] != "0":
+        raise HTTPException(status_code=400, detail="Two-factor authentication is already enabled")
+
+    if not verifyCode(auth_key, totp_code):
+        raise HTTPException(status_code=400, detail="Invalid code")
+
+    insertUpdateDeleteRequest(updateTwoFactorAuth(), (auth_key, current_user[2]))
+    return {"message": "Two-factor authentication enabled successfully"}
+
+
+@app.post("/check_two_factor_auth/")
+async def checkTwoFactorAuth(
+    current_user: Annotated[User, Depends(getCurrentUserFromToken)],
+    totp_code: str
+):
+    if current_user[5] == "0":
+        raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
+
+    if not verifyCode(current_user[5], totp_code):
+        raise HTTPException(status_code=400, detail="Invalid code")
+
+    return {"message": "Two-factor authentication successfully checked"}
+
+
+@app.post("/disable_two_factor_auth/")
+async def disableTwoFactorAuth(
+    current_user: Annotated[User, Depends(getCurrentUserFromToken)]
+):
+    if current_user[5] == "0":
+        raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
+
+    insertUpdateDeleteRequest(updateTwoFactorAuth(), ("0", current_user[2]))
+    return {"message": "Two-factor authentication disabled successfully"}
