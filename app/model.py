@@ -23,3 +23,7 @@ class TokenData(BaseModel):
 
 class TokenInfo(BaseModel):
     exp: int
+
+
+class AuthKey(BaseModel):
+    authKey: str
