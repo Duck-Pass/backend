@@ -38,3 +38,75 @@ def db_cursor():
         raise
     finally:
         dbpool.putconn(conn)
+
+"""
+    Execute database creation
+"""
+def createDatabase():
+    with db_cursor() as cur:
+        cur.execute(database())
+
+
+"""
+    Execute select requests
+    @param req: str 
+    @param values: tuple
+    @return select result
+"""
+def selectRequest(req, values):
+    with db_cursor() as cur:
+        cur.execute(req, values)
+        return cur.fetchone()
+
+
+"""
+    Execute insert and update requests
+    @param req: str
+    @param values: tuple
+"""
+def insertUpdateDeleteRequest(req, values):
+    with db_cursor() as cur:
+        cur.execute(req, values)
+
+
+"""
+    Database request
+"""
+def database():
+     return """
+        DROP SCHEMA IF EXISTS duckpass CASCADE;
+        CREATE SCHEMA duckpass;
+
+        SET SEARCH_PATH TO duckpass;
+
+        DROP TABLE IF EXISTS "User" CASCADE;
+        CREATE TABLE "User"
+        (
+            userId                 SERIAL,
+            username               VARCHAR(32),
+            email                  VARCHAR(256) UNIQUE,
+            keyHash     VARCHAR(2048) NOT NULL,
+            symmetricKeyEncrypted  VARCHAR(2048) NOT NULL,
+            twoFactorAuth VARCHAR(2048),
+            vaultPassword bytea,
+            PRIMARY KEY (userId)
+        );
+    """
+
+
+"""
+    Request to select user
+"""
+def selectUser():
+    return """SELECT * FROM duckpass."User" WHERE email = %s"""
+
+
+"""
+    Request to insert user
+"""
+def insertUser():
+    return """INSERT INTO duckpass."User" (username, email, keyHash, symmetricKeyEncrypted, twoFactorAuth, vaultPassword) VALUES (%s, %s,%s, %s, %s, %s)"""
+
+
+def deleteUser():
+    return """DELETE FROM duckpass."User" WHERE email = %s"""
