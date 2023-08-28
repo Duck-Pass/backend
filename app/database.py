@@ -38,4 +38,3 @@ def db_cursor():
         raise
     finally:
         dbpool.putconn(conn)
-
