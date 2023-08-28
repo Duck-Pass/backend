@@ -1,7 +1,7 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
+from fastapi.security import OAuth2PasswordRequestForm
 from starlette.responses import RedirectResponse
-from .database import *
-from .utils import byteaToText
+from .auth import *
 
 """
     Handle 404 error and redirect to custom 404 page
@@ -34,15 +34,56 @@ def createNewUser(username: str, email: str, key_hash: str, symmetric_key_encryp
 
 
 """
-    Select user in database
+    Authenticate user and return user's data in JSON format
     @param email: str
     @return user: User
 """
-@app.get("/get_user/")
-async def getUser(email: str):
-    user_data = (email,)
-    user = selectRequest(selectUser(), user_data)
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    user = user[:-1] + (byteaToText(user[-1]),)
-    return user
+@app.get("/get_user/", response_model=User)
+async def getUser(
+    current_user: Annotated[User, Depends(getCurrentUserFromToken)]
+):
+    current_user = User(
+        id=current_user[0],
+        username=current_user[1],
+        email=current_user[2],
+        keyHash=current_user[3],
+        symmetricKeyEncrypted=current_user[4],
+        twoFactorAuth=current_user[5],
+        vaultPassword=current_user[6]
+    )
+    return current_user
+
+
+"""
+    Endpoint to get access token
+    @param form_data: OAuth2PasswordRequestForm
+    @return Token
+"""
+@app.post("/token", response_model=Token)
+async def getAccessToken(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+):
+    user = AuthenticateUser(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = createAccessToken(
+        data={"sub": user[2]}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+"""
+    Endpoint to get token info about expiration date
+    @param token: str
+    @return TokenInfo
+"""
+@app.get("/token_info/", response_model=TokenInfo)
+def getTokenExpDate(token: str = Depends(oauth2_scheme)):
+    decoded_token = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    expiration_timestamp = decoded_token['exp']
+    return {"exp": expiration_timestamp}
