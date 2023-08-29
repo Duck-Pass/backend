@@ -167,3 +167,12 @@ async def disableTwoFactorAuth(
 
     insertUpdateDeleteRequest(updateTwoFactorAuth(), ("0", current_user.email))
     return {"message": "Two-factor authentication disabled successfully"}
+
+
+@app.post("update_vault")
+def updateVault(
+    current_user: Annotated[User, Depends(getCurrentUserFromToken)],
+    vault: str
+):
+    insertUpdateDeleteRequest(updateVault(), (get_byte_from_base64(vault), current_user.email))
+    return {"message": "Vault updated successfully"}
