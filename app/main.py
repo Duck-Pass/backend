@@ -1,9 +1,11 @@
 from fastapi import FastAPI, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 from .auth import *
 from .twoFactorAuth import *
 from .mail import *
+
 
 """
     Handle 404 error and redirect to custom 404 page
@@ -17,6 +19,15 @@ async def redirectionToNotFound(request: Request, exc: HTTPException):
 
 exception_handlers = {404: redirectionToNotFound}
 app = FastAPI(exception_handlers=exception_handlers)    # Create FastAPI instance
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 """
@@ -45,7 +56,7 @@ async def createNewUser(username: str, email: str, key_hash: str, key_hash_conf:
     return {"message": "User created successfully"}
 
 
-@app.get("/verify/")
+@app.post("/verify/")
 async def email_verification(token: str):
     user = await getCurrentUserFromToken(token)
     if user and not user.verified:
