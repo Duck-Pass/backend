@@ -23,7 +23,21 @@ def getUserFromDB(email: str):
    user = selectRequest(selectUser(), user_data)
    if user is None:
        raise HTTPException(status_code=404, detail="User not found")
-   user = user[:-1] + (byteaToText(user[-1]),)
+   if user[-1] is not None:
+       user = user[:-1] + (byteaToText(user[-1]),)
+
+   user = User(
+       id=user[0],
+       username=user[1],
+       email=user[2],
+       keyHash=user[3],
+       symmetricKeyEncrypted=user[4],
+       twoFactorAuth=user[5],
+       verified=user[6],
+       vaultPassword=user[7]
+   )
+
+   print(user)
    return user
 
 
@@ -37,7 +51,7 @@ def AuthenticateUser(email: str, password: str):
     user = getUserFromDB(email)
     if not user:
         return False
-    if not password == user[3]:
+    if not password == user.keyHash:
         return False
     return user
 
@@ -73,12 +87,16 @@ async def getCurrentUserFromToken(token: Annotated[str, Depends(oauth2_scheme)])
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
+        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: ", username)
         if username is None:
+            print("11111111111111111111111111111111111111111111111111")
             raise credentialsException
         tokenData = TokenData(username=username)
     except JWTError:
+        print("2222222222222222222222222222222222222222222222")
         raise credentialsException
     user = getUserFromDB(tokenData.username)
+    print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB: ", user)
     if user is None:
         raise credentialsException
     return user

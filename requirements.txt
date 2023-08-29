@@ -11,3 +11,4 @@ requests~=2.31.0
 pyJWT==2.8.0
 pydantic==2.3.0
 pyotp~=2.9.0
+fastapi-mail==1.4.1
