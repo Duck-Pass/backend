@@ -2,10 +2,10 @@ from fastapi import FastAPI, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
-from .auth import *
 from .twoFactorAuth import *
 from .mail import *
-
+from .crypto import *
+from base64 import b64encode
 
 """
     Handle 404 error and redirect to custom 404 page
@@ -49,7 +49,9 @@ async def createNewUser(username: str, email: str, key_hash: str, key_hash_conf:
     if not key_hash == key_hash_conf:
         raise HTTPException(status_code=400, detail="Passwords do not match")
 
-    user_data = (username, email, key_hash, symmetric_key_encrypted)
+    salt, h = generate_master_key_hash(get_byte_from_base64(key_hash))
+
+    user_data = (username, email, b64encode(h).decode(), symmetric_key_encrypted, b64encode(salt).decode())
     insertUpdateDeleteRequest(insertUser(), user_data)
     await send_email(email)
 
