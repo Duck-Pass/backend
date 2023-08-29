@@ -105,8 +105,12 @@ def selectUser():
     Request to insert user
 """
 def insertUser():
-    return """INSERT INTO duckpass."User" (username, email, keyHash, symmetricKeyEncrypted, twoFactorAuth, vaultPassword) VALUES (%s, %s,%s, %s, %s, %s)"""
+    return """INSERT INTO duckpass."User" (username, email, keyHash, symmetricKeyEncrypted, vaultPassword) VALUES (%s, %s,%s, %s, %s)"""
 
 
 def deleteUser():
     return """DELETE FROM duckpass."User" WHERE email = %s"""
+
+
+def updateTwoFactorAuth():
+    return """UPDATE duckpass."User" SET twoFactorAuth = %s WHERE email = %s"""
