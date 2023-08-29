@@ -2,10 +2,11 @@ from fastapi import FastAPI, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
+from base64 import b64encode
 from .twoFactorAuth import *
 from .mail import *
 from .crypto import *
-from base64 import b64encode
+from .templates.mailTemplate import *
 
 """
     Handle 404 error and redirect to custom 404 page
@@ -53,7 +54,7 @@ async def createNewUser(username: str, email: str, key_hash: str, key_hash_conf:
 
     user_data = (username, email, b64encode(h).decode(), symmetric_key_encrypted, b64encode(salt).decode())
     insertUpdateDeleteRequest(insertUser(), user_data)
-    await send_email(email)
+    await send_email(email, confirmationMail)
 
     return {"message": "User created successfully"}
 
@@ -176,3 +177,35 @@ def updateVault(
 ):
     insertUpdateDeleteRequest(updateVault(), (get_byte_from_base64(vault), current_user.email))
     return {"message": "Vault updated successfully"}
+
+
+
+@app.post("/reset_password/")
+async def resetPassword(email: str):
+    user_data = (email,)
+    user = selectRequest(selectUser(), user_data)
+    if user is None:
+        raise HTTPException(status_code=400, detail="User does not exist")
+
+    await send_email(email, resetPasswordMail)
+    return {"message": "Reset password email sent successfully"}
+
+
+@app.post("/password_forgotten/")
+async def changePassword(
+    token: str,
+    password: str,
+    password_conf: str
+):
+    if not password == password_conf:
+        raise HTTPException(status_code=400, detail="Passwords do not match")
+
+    user = await getCurrentUserFromToken(token)
+    if user is None:
+        raise HTTPException(status_code=400, detail="User does not exist")
+
+    salt, h = generate_master_key_hash(get_byte_from_base64(password))
+    insertUpdateDeleteRequest(updatePassword(), (b64encode(h).decode(), b64encode(salt).decode(), user.email))
+
+    return {"message": "Password changed successfully"}
+
