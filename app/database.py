@@ -120,3 +120,7 @@ def updateTwoFactorAuth():
 
 def updateVerification():
     return """UPDATE duckpass."User" SET verified = TRUE WHERE email = %s"""
+
+
+def updateVault():
+    return """UPDATE duckpass."User" SET vaultPassword = %s WHERE email = %s"""
