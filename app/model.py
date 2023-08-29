@@ -8,6 +8,7 @@ class User(BaseModel):
     email: str
     keyHash: str
     symmetricKeyEncrypted: str
+    salt: str
     twoFactorAuth: str
     verified: bool
     vaultPassword: Optional[bytes]
