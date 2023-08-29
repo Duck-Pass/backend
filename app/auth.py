@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from .model import *
 from .database import *
+from .crypto import *
 from .utils import byteaToText
 
 SECRET_KEY = os.environ['SECRET_KEY']                                           # Key to generate token
@@ -32,12 +33,12 @@ def getUserFromDB(email: str):
        email=user[2],
        keyHash=user[3],
        symmetricKeyEncrypted=user[4],
-       twoFactorAuth=user[5],
-       verified=user[6],
-       vaultPassword=user[7]
+       salt=user[5],
+       twoFactorAuth=user[6],
+       verified=user[7],
+       vaultPassword=user[8]
    )
 
-   print(user)
    return user
 
 
@@ -51,7 +52,7 @@ def AuthenticateUser(email: str, password: str):
     user = getUserFromDB(email)
     if not user:
         return False
-    if not password == user.keyHash:
+    if not verify_master_key_hash(get_byte_from_base64(password), get_byte_from_base64(user.salt), get_byte_from_base64(user.keyHash)):
         return False
     return user
 
@@ -87,16 +88,12 @@ async def getCurrentUserFromToken(token: Annotated[str, Depends(oauth2_scheme)])
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
-        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: ", username)
         if username is None:
-            print("11111111111111111111111111111111111111111111111111")
             raise credentialsException
         tokenData = TokenData(username=username)
     except JWTError:
-        print("2222222222222222222222222222222222222222222222")
         raise credentialsException
     user = getUserFromDB(tokenData.username)
-    print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB: ", user)
     if user is None:
         raise credentialsException
     return user

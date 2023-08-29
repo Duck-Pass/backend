@@ -1,6 +1,5 @@
 import pytest
 from app.database import *
-from app.utils import byteaToText
 
 
 def test_db_connection():
@@ -16,9 +15,9 @@ def test_query_execution():
 
 
 def test_create_user():
-    insertUpdateDeleteRequest(insertUser(), ("test", "testMail@duckpass.ch", "testPassword", "testSymmetricKey"))
+    insertUpdateDeleteRequest(insertUser(), ("test", "testMail@duckpass.ch", "testPassword", "testSymmetricKey", "Salt"))
     user = selectRequest(selectUser(), ("testMail@duckpass.ch",))[1:]
-    assert user == ("test", "testMail@duckpass.ch", "testPassword", "testSymmetricKey", "0", False, None)
+    assert user == ("test", "testMail@duckpass.ch", "testPassword", "testSymmetricKey", "Salt", "0", False, None)
 
 
 @pytest.mark.dependency(depends=["test_create_user"])
