@@ -59,7 +59,7 @@ async def createNewUser(username: str, email: str, key_hash: str, key_hash_conf:
     return {"message": "User created successfully"}
 
 
-@app.post("/verify/")
+@app.get("/verify/")
 async def email_verification(token: str):
     user = await getCurrentUserFromToken(token)
     if user and not user.verified:
