@@ -124,3 +124,7 @@ def updateVerification():
 
 def updateVault():
     return """UPDATE duckpass."User" SET vaultPassword = %s WHERE email = %s"""
+
+
+def updatePassword():
+    return """UPDATE duckpass."User" SET keyHash = %s, salt = %s WHERE email = %s"""
