@@ -110,3 +110,7 @@ def insertUser():
 
 def deleteUser():
     return """DELETE FROM duckpass."User" WHERE email = %s"""
+
+
+def updateTwoFactorAuth():
+    return """UPDATE duckpass."User" SET twoFactorAuth = %s WHERE email = %s"""
