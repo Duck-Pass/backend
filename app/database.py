@@ -100,14 +100,14 @@ def database():
     Request to select user
 """
 def selectUser():
-    return """SELECT * FROM duckpass."User" WHERE email = %s"""
+    return """SELECT userid, username, email, keyhash, symmetrickeyencrypted, twofactorauth, verified, vaultpassword  FROM duckpass."User" WHERE email = %s"""
 
 
 """
     Request to insert user
 """
 def insertUser():
-    return """INSERT INTO duckpass."User" (username, email, keyHash, symmetricKeyEncrypted, vaultPassword) VALUES (%s, %s,%s, %s, %s)"""
+    return """INSERT INTO duckpass."User" (username, email, keyHash, symmetricKeyEncrypted) VALUES (%s, %s,%s, %s)"""
 
 
 def deleteUser():
@@ -116,3 +116,7 @@ def deleteUser():
 
 def updateTwoFactorAuth():
     return """UPDATE duckpass."User" SET twoFactorAuth = %s WHERE email = %s"""
+
+
+def updateVerification():
+    return """UPDATE duckpass."User" SET verified = TRUE WHERE email = %s"""

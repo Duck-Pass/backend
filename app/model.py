@@ -9,7 +9,8 @@ class User(BaseModel):
     keyHash: str
     symmetricKeyEncrypted: str
     twoFactorAuth: str
-    vaultPassword: bytes
+    verified: bool
+    vaultPassword: Optional[bytes]
 
 
 class Token(BaseModel):

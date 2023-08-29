@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from starlette.responses import RedirectResponse
 from .auth import *
 from .twoFactorAuth import *
+from .mail import *
 
 """
     Handle 404 error and redirect to custom 404 page
@@ -23,15 +24,36 @@ app = FastAPI(exception_handlers=exception_handlers)    # Create FastAPI instanc
     @param username: str
     @param email: str
     @param key_hash: str
+    @param key_hash_conf: str
     @param symmetric_key_encrypted: str
-    @param two_factor_auth: str
-    @param vault_password: str    
 """
-@app.post("/create_user/")
-def createNewUser(username: str, email: str, key_hash: str, symmetric_key_encrypted: str, two_factor_auth: str, vault_password: str):
-    user_data = (username, email, key_hash, symmetric_key_encrypted, two_factor_auth, vault_password)
+@app.post("/register/")
+async def createNewUser(username: str, email: str, key_hash: str, key_hash_conf: str, symmetric_key_encrypted: str):
+
+    user_data = (email,)
+    user = selectRequest(selectUser(), user_data)
+    if user is not None:
+        raise HTTPException(status_code=400, detail="User already exists")
+
+    if not key_hash == key_hash_conf:
+        raise HTTPException(status_code=400, detail="Passwords do not match")
+
+    user_data = (username, email, key_hash, symmetric_key_encrypted)
     insertUpdateDeleteRequest(insertUser(), user_data)
+    await send_email(email)
+
     return {"message": "User created successfully"}
+
+
+@app.get("/verify/")
+async def email_verification(token: str):
+    user = await getCurrentUserFromToken(token)
+    if user and not user.verified:
+        insertUpdateDeleteRequest(updateVerification(), (user.email,))
+        redirect_url = "https://staging.duckpass.ch/verification"
+        return RedirectResponse(url=redirect_url)
+    else:
+        raise HTTPException(status_code=400, detail="User already verified")
 
 
 """
@@ -43,15 +65,6 @@ def createNewUser(username: str, email: str, key_hash: str, symmetric_key_encryp
 async def getUser(
     current_user: Annotated[User, Depends(getCurrentUserFromToken)]
 ):
-    current_user = User(
-        id=current_user[0],
-        username=current_user[1],
-        email=current_user[2],
-        keyHash=current_user[3],
-        symmetricKeyEncrypted=current_user[4],
-        twoFactorAuth=current_user[5],
-        vaultPassword=current_user[6]
-    )
     return current_user
 
 
@@ -71,9 +84,10 @@ async def getAccessToken(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = createAccessToken(
-        data={"sub": user[2]}, expires_delta=access_token_expires
+        data={"sub": user.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -95,7 +109,7 @@ async def generateAuthKey(
     current_user: Annotated[User, Depends(getCurrentUserFromToken)]
 ):
 
-    if current_user[5] != "0":
+    if current_user.twoFactorAuth != "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is already enabled")
 
     return {"authKey": generateSecret()}
@@ -107,13 +121,13 @@ async def enableTwoFactorAuth(
     auth_key: str,
     totp_code: str
 ):
-    if current_user[5] != "0":
+    if current_user.twoFactorAuth != "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is already enabled")
 
     if not verifyCode(auth_key, totp_code):
         raise HTTPException(status_code=400, detail="Invalid code")
 
-    insertUpdateDeleteRequest(updateTwoFactorAuth(), (auth_key, current_user[2]))
+    insertUpdateDeleteRequest(updateTwoFactorAuth(), (auth_key, current_user.email))
     return {"message": "Two-factor authentication enabled successfully"}
 
 
@@ -122,10 +136,10 @@ async def checkTwoFactorAuth(
     current_user: Annotated[User, Depends(getCurrentUserFromToken)],
     totp_code: str
 ):
-    if current_user[5] == "0":
+    if current_user.twoFactorAuth == "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
 
-    if not verifyCode(current_user[5], totp_code):
+    if not verifyCode(current_user.twoFactorAuth, totp_code):
         raise HTTPException(status_code=400, detail="Invalid code")
 
     return {"message": "Two-factor authentication successfully checked"}
@@ -135,8 +149,8 @@ async def checkTwoFactorAuth(
 async def disableTwoFactorAuth(
     current_user: Annotated[User, Depends(getCurrentUserFromToken)]
 ):
-    if current_user[5] == "0":
+    if current_user.twoFactorAuth == "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
 
-    insertUpdateDeleteRequest(updateTwoFactorAuth(), ("0", current_user[2]))
+    insertUpdateDeleteRequest(updateTwoFactorAuth(), ("0", current_user.email))
     return {"message": "Two-factor authentication disabled successfully"}

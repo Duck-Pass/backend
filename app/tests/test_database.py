@@ -16,11 +16,9 @@ def test_query_execution():
 
 
 def test_create_user():
-    insertUpdateDeleteRequest(insertUser(), ("test", "testMail@duckpass.ch", "testPassword", "testSymmetricKey", "testVault"))
+    insertUpdateDeleteRequest(insertUser(), ("test", "testMail@duckpass.ch", "testPassword", "testSymmetricKey"))
     user = selectRequest(selectUser(), ("testMail@duckpass.ch",))[1:]
-    user = user[:-1] + (byteaToText(user[-1]),)
-    user = user[:-2] + user[-1:]
-    assert user == ("test", "testMail@duckpass.ch", "testPassword", "testSymmetricKey", "0", False, "testVault")
+    assert user == ("test", "testMail@duckpass.ch", "testPassword", "testSymmetricKey", "0", False, None)
 
 
 @pytest.mark.dependency(depends=["test_create_user"])
