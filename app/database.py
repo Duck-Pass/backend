@@ -73,39 +73,41 @@ def insertUpdateDeleteRequest(req, values):
     Database request
 """
 def database():
-     return """
-        DROP SCHEMA IF EXISTS duckpass CASCADE;
-        CREATE SCHEMA duckpass;
+    return """
+         DROP SCHEMA IF EXISTS duckpass CASCADE;
+         CREATE SCHEMA duckpass;
 
-        SET SEARCH_PATH TO duckpass;
+         SET SEARCH_PATH TO duckpass;
 
-        DROP TABLE IF EXISTS "User" CASCADE;
-        CREATE TABLE "User"
-        (
-            userId                 SERIAL,
-            username               VARCHAR(32),
-            email                  VARCHAR(256) UNIQUE,
-            keyHash     VARCHAR(2048) NOT NULL,
-            symmetricKeyEncrypted  VARCHAR(2048) NOT NULL,
-            twoFactorAuth VARCHAR(2048),
+         DROP TABLE IF EXISTS "User" CASCADE;
+         CREATE TABLE "User"
+         (
+             userId                 SERIAL,
+             username               VARCHAR(32),
+             email                  VARCHAR(256) UNIQUE,
+             keyHash     VARCHAR(2048) NOT NULL,
+             symmetricKeyEncrypted  VARCHAR(2048) NOT NULL,
+             twoFactorAuth VARCHAR(2048) DEFAULT '0',
+             verified BOOLEAN DEFAULT FALSE,
+             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             vaultPassword bytea,
-            PRIMARY KEY (userId)
-        );
-    """
+             PRIMARY KEY (userId)
+         );
+     """
 
 
 """
     Request to select user
 """
 def selectUser():
-    return """SELECT * FROM duckpass."User" WHERE email = %s"""
+    return """SELECT userid, username, email, keyhash, symmetrickeyencrypted, twofactorauth, verified, vaultpassword  FROM duckpass."User" WHERE email = %s"""
 
 
 """
     Request to insert user
 """
 def insertUser():
-    return """INSERT INTO duckpass."User" (username, email, keyHash, symmetricKeyEncrypted, vaultPassword) VALUES (%s, %s,%s, %s, %s)"""
+    return """INSERT INTO duckpass."User" (username, email, keyHash, symmetricKeyEncrypted) VALUES (%s, %s,%s, %s)"""
 
 
 def deleteUser():
@@ -114,3 +116,7 @@ def deleteUser():
 
 def updateTwoFactorAuth():
     return """UPDATE duckpass."User" SET twoFactorAuth = %s WHERE email = %s"""
+
+
+def updateVerification():
+    return """UPDATE duckpass."User" SET verified = TRUE WHERE email = %s"""
