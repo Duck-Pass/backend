@@ -77,11 +77,19 @@ async def email_verification(token: str):
     @param email: str
     @return user: User
 """
-@app.get("/get_user/", response_model=User)
+@app.get("/get_user/", response_model=UserGet)
 async def getUser(
     current_user: Annotated[User, Depends(getCurrentUserFromToken)]
 ):
-    return current_user
+    userGet = UserGet(
+        id=current_user.id,
+        email=current_user.email,
+        symmetricKeyEncrypted=current_user.symmetricKeyEncrypted,
+        twoFactorAuth=current_user.twoFactorAuth,
+        vaultPassword=current_user.vaultPassword
+    )
+
+    return userGet
 
 
 """
