@@ -85,8 +85,8 @@ async def getUser(
         id=current_user.id,
         email=current_user.email,
         symmetricKeyEncrypted=current_user.symmetricKeyEncrypted,
-        twoFactorAuth=current_user.twoFactorAuth,
-        vaultPassword=current_user.vaultPassword
+        hasTwoFactorAuth=current_user.hastwofactorauth,
+        vault=current_user.vault
     )
 
     return userGet
@@ -157,16 +157,24 @@ async def enableTwoFactorAuth(
 
 @app.post("/check_two_factor_auth/")
 async def checkTwoFactorAuth(
-    current_user: Annotated[User, Depends(getCurrentUserFromToken)],
+    email: str,
+    password: str,
     totp_code: str
 ):
+    current_user = AuthenticateUser(email, password)
+
+    if not current_user:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
     if current_user.twoFactorAuth == "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
-
     if not verifyCode(current_user.twoFactorAuth, totp_code):
         raise HTTPException(status_code=400, detail="Invalid code")
 
-    return {"message": "Two-factor authentication successfully checked"}
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = createAccessToken(
+        data={"sub": current_user.email}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @app.post("/disable_two_factor_auth/")

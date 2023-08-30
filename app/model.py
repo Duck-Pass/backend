@@ -8,16 +8,17 @@ class User(BaseModel):
     keyHash: str
     symmetricKeyEncrypted: str
     salt: str
+    hastwofactorauth: bool
     twoFactorAuth: str
     verified: bool
-    vaultPassword: Optional[bytes]
+    vault: Optional[bytes]
 
 class UserGet(BaseModel):
     id: int
     email: str
     symmetricKeyEncrypted: str
-    twoFactorAuth: str
-    vaultPassword: Optional[bytes]
+    hasTwoFactorAuth: bool
+    vault: Optional[bytes]
 
 
 class Token(BaseModel):

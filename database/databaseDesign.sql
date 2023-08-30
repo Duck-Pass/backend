@@ -11,6 +11,7 @@
     keyHash     VARCHAR(2048) NOT NULL,
     symmetricKeyEncrypted  VARCHAR(2048) NOT NULL,
     salt VARCHAR(2048) NOT NULL,
+    hasTwoFactorAuth BOOLEAN DEFAULT FALSE,
     twoFactorAuth VARCHAR(2048) DEFAULT '0',
     verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

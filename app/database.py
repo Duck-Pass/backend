@@ -76,9 +76,9 @@ def database():
     return """
      DROP SCHEMA IF EXISTS duckpass CASCADE;
      CREATE SCHEMA duckpass;
-
+    
      SET SEARCH_PATH TO duckpass;
-
+    
      DROP TABLE IF EXISTS "User" CASCADE;
      CREATE TABLE "User"
      (
@@ -87,10 +87,11 @@ def database():
         keyHash     VARCHAR(2048) NOT NULL,
         symmetricKeyEncrypted  VARCHAR(2048) NOT NULL,
         salt VARCHAR(2048) NOT NULL,
+        hasTwoFactorAuth BOOLEAN DEFAULT FALSE,
         twoFactorAuth VARCHAR(2048) DEFAULT '0',
         verified BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        vaultPassword bytea,
+        vault bytea,
         PRIMARY KEY (userId)
      );
      """
@@ -100,7 +101,7 @@ def database():
     Request to select user
 """
 def selectUser():
-    return """SELECT userid, email, keyhash, symmetrickeyencrypted, salt, twofactorauth, verified, vaultpassword  FROM duckpass."User" WHERE email = %s"""
+    return """SELECT userid, email, keyhash, symmetrickeyencrypted, salt, hastwofactorauth, twofactorauth, verified, vault  FROM duckpass."User" WHERE email = %s"""
 
 
 """
@@ -123,7 +124,7 @@ def updateVerification():
 
 
 def updateVault():
-    return """UPDATE duckpass."User" SET vaultPassword = %s WHERE email = %s"""
+    return """UPDATE duckpass."User" SET vault = %s WHERE email = %s"""
 
 
 def updatePassword():
