@@ -1,3 +1,8 @@
+import os
+
+SITE = os.environ.get('SITE')
+API = os.environ.get('API')
+
 def confirmationMail(token):
 
     return "DuckPass Account Verification", f"""
@@ -12,7 +17,7 @@ def confirmationMail(token):
                 <br>
                 <p style="color: #555;">Thanks for choosing DuckPass! Quack on the link below to verify your account:</p>
 
-                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; background: #022837; color: white;" href="http://api-staging.duckpass.ch/verify/?token={token}">
+                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; background: #022837; color: white;" href="http://{API}/verify/?token={token}">
                     Verify your email
                 <a>
 
@@ -36,7 +41,7 @@ def resetPasswordMail(token):
                 <br>
                 <p style="color: #555;">Forgot your password? No worries! Quack on the link below to reset it:</p>
 
-                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; background: #022837; color: white;" href="http://staging.duckpass.ch/reset/?token={token}">
+                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; background: #022837; color: white;" href="https://{SITE}/#/reset/?token={token}">
                     Reset Password
                 <a>
 
