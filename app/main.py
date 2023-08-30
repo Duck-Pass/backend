@@ -197,7 +197,8 @@ async def resetPassword(email: str):
 async def changePassword(
     token: str,
     password: str,
-    password_conf: str
+    password_conf: str,
+    sym_key: str
 ):
     if not password == password_conf:
         raise HTTPException(status_code=400, detail="Passwords do not match")
@@ -207,7 +208,7 @@ async def changePassword(
         raise HTTPException(status_code=400, detail="User does not exist")
 
     salt, h = generate_master_key_hash(get_byte_from_base64(password))
-    insertUpdateDeleteRequest(updatePassword(), (b64encode(h).decode(), b64encode(salt).decode(), user.email))
+    insertUpdateDeleteRequest(updatePassword(), (b64encode(h).decode(), sym_key, b64encode(salt).decode(), user.email))
 
     return {"message": "Password changed successfully"}
 
