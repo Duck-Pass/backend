@@ -36,14 +36,13 @@ app.add_middleware(
 
 """
     Create user in database
-    @param username: str
     @param email: str
     @param key_hash: str
     @param key_hash_conf: str
     @param symmetric_key_encrypted: str
 """
 @app.post("/register/")
-async def createNewUser(username: str, email: str, key_hash: str, key_hash_conf: str, symmetric_key_encrypted: str):
+async def createNewUser(email: str, key_hash: str, key_hash_conf: str, symmetric_key_encrypted: str):
 
     user_data = (email,)
     user = selectRequest(selectUser(), user_data)
@@ -55,7 +54,7 @@ async def createNewUser(username: str, email: str, key_hash: str, key_hash_conf:
 
     salt, h = generate_master_key_hash(get_byte_from_base64(key_hash))
 
-    user_data = (username, email, b64encode(h).decode(), symmetric_key_encrypted, b64encode(salt).decode())
+    user_data = (email, b64encode(h).decode(), symmetric_key_encrypted, b64encode(salt).decode())
     insertUpdateDeleteRequest(insertUser(), user_data)
     await send_email(email, confirmationMail)
 

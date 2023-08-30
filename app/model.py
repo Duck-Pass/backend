@@ -4,7 +4,6 @@ from typing import Optional
 
 class User(BaseModel):
     id: int
-    username: str
     email: str
     keyHash: str
     symmetricKeyEncrypted: str
