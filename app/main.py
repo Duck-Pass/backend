@@ -1,12 +1,15 @@
+import json
+
 from fastapi import FastAPI, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, Response
 from base64 import b64encode
 from .twoFactorAuth import *
 from .mail import *
 from .crypto import *
 from .templates.mailTemplate import *
+from .hibp import *
 
 """
     Handle 404 error and redirect to custom 404 page
@@ -208,4 +211,13 @@ async def changePassword(
     insertUpdateDeleteRequest(updatePassword(), (b64encode(h).decode(), b64encode(salt).decode(), user.email))
 
     return {"message": "Password changed successfully"}
+
+
+@app.get("/hibp_breaches/")
+async def getHIBPBreaches(
+    current_user: Annotated[User, Depends(getCurrentUserFromToken)]
+):
+    json_data = await getBreachesForUser(current_user.email)
+    return Response(content=json.dumps(json_data), media_type="application/json")
+
 
