@@ -19,7 +19,7 @@ SITE = os.environ.get('SITE')
     @return RedirectResponse
 """
 async def redirectionToNotFound(request: Request, exc: HTTPException):
-    return RedirectResponse(f"https://{SITE}/#/404.html")
+    return RedirectResponse(status_code=404, url=f"https://{SITE}/#/404.html")
 
 exception_handlers = {404: redirectionToNotFound}
 app = FastAPI(exception_handlers=exception_handlers)    # Create FastAPI instance
