@@ -1,5 +1,4 @@
 import pyhibp
-import json
 import os
 
 HIBP_API_KEY = os.environ.get("HIBP_API_KEY")

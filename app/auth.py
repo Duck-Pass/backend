@@ -29,14 +29,13 @@ def getUserFromDB(email: str):
 
    user = User(
        id=user[0],
-       username=user[1],
-       email=user[2],
-       keyHash=user[3],
-       symmetricKeyEncrypted=user[4],
-       salt=user[5],
-       twoFactorAuth=user[6],
-       verified=user[7],
-       vaultPassword=user[8]
+       email=user[1],
+       keyHash=user[2],
+       symmetricKeyEncrypted=user[3],
+       salt=user[4],
+       twoFactorAuth=user[5],
+       verified=user[6],
+       vaultPassword=user[7]
    )
 
    return user
