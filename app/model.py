@@ -12,6 +12,13 @@ class User(BaseModel):
     verified: bool
     vaultPassword: Optional[bytes]
 
+class UserGet(BaseModel):
+    id: int
+    email: str
+    symmetricKeyEncrypted: str
+    twoFactorAuth: str
+    vaultPassword: Optional[bytes]
+
 
 class Token(BaseModel):
     access_token: str
