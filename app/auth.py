@@ -33,9 +33,10 @@ def getUserFromDB(email: str):
        keyHash=user[2],
        symmetricKeyEncrypted=user[3],
        salt=user[4],
-       twoFactorAuth=user[5],
-       verified=user[6],
-       vaultPassword=user[7]
+       hastwofactorauth=user[5],
+       twoFactorAuth=user[6],
+       verified=user[7],
+       vault=user[8]
    )
 
    return user
