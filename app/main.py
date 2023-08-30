@@ -1,15 +1,16 @@
-import json
-
 from fastapi import FastAPI, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse, Response
 from base64 import b64encode
+import json
 from .twoFactorAuth import *
 from .mail import *
 from .crypto import *
 from .templates.mailTemplate import *
 from .hibp import *
+
+SITE = os.environ.get('SITE')
 
 """
     Handle 404 error and redirect to custom 404 page
@@ -18,8 +19,7 @@ from .hibp import *
     @return RedirectResponse
 """
 async def redirectionToNotFound(request: Request, exc: HTTPException):
-    return RedirectResponse('https://duckpass.ch/404.html')
-
+    return RedirectResponse(f"https://{SITE}/#/404.html")
 
 exception_handlers = {404: redirectionToNotFound}
 app = FastAPI(exception_handlers=exception_handlers)    # Create FastAPI instance
@@ -66,7 +66,7 @@ async def email_verification(token: str):
     user = await getCurrentUserFromToken(token)
     if user and not user.verified:
         insertUpdateDeleteRequest(updateVerification(), (user.email,))
-        redirect_url = "https://staging.duckpass.ch/verification"
+        redirect_url = f"https://{SITE}/#/verification"
         return RedirectResponse(url=redirect_url)
     else:
         raise HTTPException(status_code=400, detail="User already verified")
