@@ -78,8 +78,14 @@ async def email_verification(token: str):
 """
 @app.get("/get_user", response_model=UserGet)
 async def getUser(
-    current_user: Annotated[User, Depends(getCurrentUserFromToken)]
+    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
 ):
+    current_user = connection_info[0]
+    token_revocation = connection_info[1]
+
+    if token_revocation:
+        raise HTTPException(status_code=401, detail="Token revoked")
+
     userGet = UserGet(
         id=current_user.id,
         email=current_user.email,
@@ -122,23 +128,15 @@ async def getAccessToken(
     )
 
 
-
-"""
-    Endpoint to get token info about expiration date
-    @param token: str
-    @return TokenInfo
-"""
-@app.get("/token_info", response_model=TokenInfo)
-def getTokenExpDate(token: str = Depends(oauth2_scheme)):
-    decoded_token = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    expiration_timestamp = decoded_token['exp']
-    return {"exp": expiration_timestamp}
-
-
 @app.get("/generate_auth_key", response_model=AuthKey)
 async def generateAuthKey(
-    current_user: Annotated[User, Depends(getCurrentUserFromToken)]
+    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
 ):
+    current_user = connection_info[0]
+    token_revocation = connection_info[1]
+
+    if token_revocation:
+        raise HTTPException(status_code=401, detail="Token revoked")
 
     if current_user.twoFactorAuth != "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is already enabled")
@@ -149,10 +147,16 @@ async def generateAuthKey(
 
 @app.post("/enable_two_factor_auth")
 async def enableTwoFactorAuth(
-    current_user: Annotated[User, Depends(getCurrentUserFromToken)],
+    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)],
     auth_key: str,
     totp_code: str
 ):
+    current_user = connection_info[0]
+    token_revocation = connection_info[1]
+
+    if token_revocation:
+        raise HTTPException(status_code=401, detail="Token revoked")
+
     if current_user.twoFactorAuth != "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is already enabled")
 
@@ -165,17 +169,15 @@ async def enableTwoFactorAuth(
 
 @app.post("/check_two_factor_auth")
 async def checkTwoFactorAuth(
-    email: str,
-    password: str,
-    totp_code: str
+    twoFactorAuthParams: TwoFactorAuthConnectionParams
 ):
-    current_user = AuthenticateUser(email, password)
+    current_user = AuthenticateUser(twoFactorAuthParams.email, twoFactorAuthParams.password)
 
     if not current_user:
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     if current_user.twoFactorAuth == "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
-    if not verify_code(current_user.twoFactorAuth, totp_code):
+    if not verify_code(current_user.twoFactorAuth, twoFactorAuthParams.totp_code):
         raise HTTPException(status_code=400, detail="Invalid code")
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -187,8 +189,14 @@ async def checkTwoFactorAuth(
 
 @app.post("/disable_two_factor_auth")
 async def disableTwoFactorAuth(
-    current_user: Annotated[User, Depends(getCurrentUserFromToken)]
+        connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
 ):
+    current_user = connection_info[0]
+    token_revocation = connection_info[1]
+
+    if token_revocation:
+        raise HTTPException(status_code=401, detail="Token revoked")
+
     if current_user.twoFactorAuth == "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
 
@@ -198,10 +206,16 @@ async def disableTwoFactorAuth(
 
 @app.post("/update_vault")
 def updateVault(
-    current_user: Annotated[User, Depends(getCurrentUserFromToken)],
+    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)],
     vault: Vault
 ):
-    insertUpdateDeleteRequest(vaultUpdate(), (bytes(vault.vault, 'utf-8'), current_user.email))
+    current_user = connection_info[0]
+    token_revocation = connection_info[1]
+
+    if token_revocation:
+        raise HTTPException(status_code=401, detail="Token revoked")
+
+    insertUpdateDeleteRequest(updateVault(), (bytes(vault.vault, 'utf-8'), current_user.email))
     return {"message": "Vault updated successfully"}
 
 
@@ -239,9 +253,29 @@ async def changePassword(
 
 @app.get("/hibp_breaches")
 async def getHIBPBreaches(
-    current_user: Annotated[User, Depends(getCurrentUserFromToken)]
+    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
 ):
+    current_user = connection_info[0]
+    token_revocation = connection_info[1]
+
+    if token_revocation:
+        raise HTTPException(status_code=401, detail="Token revoked")
+
     json_data = await getBreachesForUser(current_user.email)
     return Response(content=json.dumps(json_data), media_type="application/json")
+
+
+@app.post("/logout")
+async def logout(
+    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpointsToken)]
+):
+    token_revocation = connection_info[0]
+    token = connection_info[1]
+
+    if token_revocation:
+        raise HTTPException(status_code=401, detail="Token already revoked")
+
+    insertUpdateDeleteRequest(addRevokedToken(), (token,))
+    return {"message": "Logout successful"}
 
 

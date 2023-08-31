@@ -26,18 +26,24 @@ class Token(BaseModel):
     token_type: str
 
 
-class TokenData(BaseModel):
-    username: Optional[str] = None
-
-
-class TokenInfo(BaseModel):
-    exp: int
-
-
 class AuthKey(BaseModel):
     authKey: str
     url: str
 
 
+class TwoFactorAuthConnectionParams(BaseModel):
+    email: str
+    password: str
+    totp_code: str
+
+
 class Vault(BaseModel):
     vault: str
+
+
+
+
+class SecureEndpointParams(BaseModel):
+    user: User
+    token_revocation: bool
+    token: Optional[str] = None
