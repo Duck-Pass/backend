@@ -85,7 +85,7 @@ async def getUser(
         email=current_user.email,
         symmetricKeyEncrypted=current_user.symmetricKeyEncrypted,
         hasTwoFactorAuth=current_user.hastwofactorauth,
-        vault=current_user.vault
+        vault=current_user.vault.decode("utf-8") if current_user.vault else None
     )
 
     return userGet
@@ -192,16 +192,16 @@ async def disableTwoFactorAuth(
     if current_user.twoFactorAuth == "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
 
-    insertUpdateDeleteRequest(updateTwoFactorAuth(), ("0", current_user.email))
+    insertUpdateDeleteRequest(updateTwoFactorAuth(), ("0", False, current_user.email))
     return {"message": "Two-factor authentication disabled successfully"}
 
 
 @app.post("/update_vault")
 def updateVault(
     current_user: Annotated[User, Depends(getCurrentUserFromToken)],
-    vault: str
+    vault: Vault
 ):
-    insertUpdateDeleteRequest(updateVault(), (get_byte_from_base64(vault), current_user.email))
+    insertUpdateDeleteRequest(updateVault(), (bytes(vault.vault, 'utf-8'), current_user.email))
     return {"message": "Vault updated successfully"}
 
 
