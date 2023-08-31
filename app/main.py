@@ -68,8 +68,7 @@ async def email_verification(token: str):
         insertUpdateDeleteRequest(updateVerification(), (user.email,))
         redirect_url = f"https://{SITE}/#/verification"
         return RedirectResponse(url=redirect_url)
-    else:
-        raise HTTPException(status_code=400, detail="User already verified")
+    raise HTTPException(status_code=400, detail="User already verified")
 
 
 """
@@ -109,11 +108,19 @@ async def getAccessToken(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = createAccessToken(
-        data={"sub": user.email}, expires_delta=access_token_expires
+    if user.hastwofactorauth == False:
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = createAccessToken(
+            data={"sub": user.email}, expires_delta=access_token_expires
+        )
+        return {"access_token": access_token, "token_type": "bearer"}
+
+    raise HTTPException(
+        status_code=status.HTTP_200_OK,
+        detail="Two-factor authentication is enabled",
+        headers={"WWW-Authenticate": "Bearer"},
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+
 
 
 """
@@ -151,7 +158,7 @@ async def enableTwoFactorAuth(
     if not verifyCode(auth_key, totp_code):
         raise HTTPException(status_code=400, detail="Invalid code")
 
-    insertUpdateDeleteRequest(updateTwoFactorAuth(), (auth_key, current_user.email))
+    insertUpdateDeleteRequest(updateTwoFactorAuth(), (auth_key, True, current_user.email))
     return {"message": "Two-factor authentication enabled successfully"}
 
 
