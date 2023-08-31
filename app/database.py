@@ -116,7 +116,7 @@ def deleteUser():
 
 
 def updateTwoFactorAuth():
-    return """UPDATE duckpass."User" SET twoFactorAuth = %s WHERE email = %s"""
+    return """UPDATE duckpass."User" SET twoFactorAuth = %s, hasTwoFactorAuth = %s WHERE email = %s"""
 
 
 def updateVerification():
