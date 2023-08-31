@@ -201,7 +201,7 @@ def updateVault(
     current_user: Annotated[User, Depends(getCurrentUserFromToken)],
     vault: Vault
 ):
-    insertUpdateDeleteRequest(updateVault(), (bytes(vault.vault, 'utf-8'), current_user.email))
+    insertUpdateDeleteRequest(vaultUpdate(), (bytes(vault.vault, 'utf-8'), current_user.email))
     return {"message": "Vault updated successfully"}
 
 

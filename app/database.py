@@ -123,7 +123,7 @@ def updateVerification():
     return """UPDATE duckpass."User" SET verified = TRUE WHERE email = %s"""
 
 
-def updateVault():
+def vaultUpdate():
     return """UPDATE duckpass."User" SET vault = %s WHERE email = %s"""
 
 
