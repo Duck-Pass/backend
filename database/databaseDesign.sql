@@ -15,6 +15,13 @@
     twoFactorAuth VARCHAR(2048) DEFAULT '0',
     verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    vaultPassword bytea,
+    vault bytea,
     PRIMARY KEY (userId)
+ );
+
+DROP TABLE IF EXISTS "RevokedToken" CASCADE;
+ CREATE TABLE "RevokedToken"
+ (
+    token VARCHAR(2048) UNIQUE,
+    PRIMARY KEY (token)
  );

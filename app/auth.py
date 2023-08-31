@@ -1,11 +1,12 @@
 from datetime import timedelta, datetime
 from fastapi import HTTPException, Depends, status
-from typing import Annotated, Union
+from typing import Annotated, Union, Tuple, Any, Coroutine
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from .model import *
 from .database import *
 from .crypto import *
+from .model import User
 from .utils import byteaToText
 
 SECRET_KEY = os.environ['SECRET_KEY']                                           # Key to generate token
@@ -90,10 +91,23 @@ async def getCurrentUserFromToken(token: Annotated[str, Depends(oauth2_scheme)])
         username: str = payload.get("sub")
         if username is None:
             raise credentialsException
-        tokenData = TokenData(username=username)
     except JWTError:
         raise credentialsException
-    user = getUserFromDB(tokenData.username)
+    user = getUserFromDB(username)
     if user is None:
         raise credentialsException
     return user
+
+
+def isTokenRevoked(token: str):
+    return selectRequest(checkTokenRevoked(), (token,))[0]
+
+
+async def protectedEndpoints(token: Annotated[str, Depends(oauth2_scheme)]) -> Tuple[User, bool]:
+    user = await getCurrentUserFromToken(token)
+    return user, isTokenRevoked(token)
+
+
+async def protectedEndpointsToken(token: Annotated[str, Depends(oauth2_scheme)]) -> Tuple[bool, str]:
+    return isTokenRevoked(token), token
+

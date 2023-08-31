@@ -94,6 +94,13 @@ def database():
         vault bytea,
         PRIMARY KEY (userId)
      );
+    
+    DROP TABLE IF EXISTS "RevokedToken" CASCADE;
+     CREATE TABLE "RevokedToken"
+     (
+        token VARCHAR(2048) UNIQUE,
+        PRIMARY KEY (token)
+     );
      """
 
 
@@ -129,3 +136,12 @@ def vaultUpdate():
 
 def updatePassword():
     return """UPDATE duckpass."User" SET keyHash = %s, symmetricKeyEncrypted = %s, salt = %s WHERE email = %s"""
+
+
+def addRevokedToken():
+    return """INSERT INTO duckpass."RevokedToken" (token) VALUES (%s)"""
+
+
+def checkTokenRevoked():
+    return """SELECT EXISTS(SELECT 1 FROM duckpass."RevokedToken" WHERE token = %s)"""
+
