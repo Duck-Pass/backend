@@ -171,7 +171,7 @@ async def enableTwoFactorAuth(
 async def checkTwoFactorAuth(
     twoFactorAuthParams: TwoFactorAuthConnectionParams
 ):
-    current_user = AuthenticateUser(twoFactorAuthParams.email, twoFactorAuthParams.password)
+    current_user = AuthenticateUser(twoFactorAuthParams.username, twoFactorAuthParams.password)
 
     if not current_user:
         raise HTTPException(status_code=400, detail="Incorrect username or password")

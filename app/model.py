@@ -32,7 +32,7 @@ class AuthKey(BaseModel):
 
 
 class TwoFactorAuthConnectionParams(BaseModel):
-    email: str
+    username: str
     password: str
     totp_code: str
 
