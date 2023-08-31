@@ -18,7 +18,7 @@ class UserGet(BaseModel):
     email: str
     symmetricKeyEncrypted: str
     hasTwoFactorAuth: bool
-    vault: Optional[bytes]
+    vault: Optional[str]
 
 
 class Token(BaseModel):
@@ -37,3 +37,7 @@ class TokenInfo(BaseModel):
 class AuthKey(BaseModel):
     authKey: str
     url: str
+
+
+class Vault(BaseModel):
+    vault: str
