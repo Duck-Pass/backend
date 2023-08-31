@@ -36,3 +36,4 @@ class TokenInfo(BaseModel):
 
 class AuthKey(BaseModel):
     authKey: str
+    url: str
