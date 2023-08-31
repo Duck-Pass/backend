@@ -12,4 +12,4 @@ def verify_code(secret, code):
 
 def generate_qrcode_url(secret, email):
     totp = pyotp.TOTP(secret)
-    return totp.provisioning_uri(name=email, issuer_name="duckpass.ch")
+    return totp.provisioning_uri(name=email, issuer_name="duckpass.ch", image="https://i.imgur.com/Xpk0PiT.png")
