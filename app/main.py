@@ -41,7 +41,7 @@ app.add_middleware(
     @param key_hash_conf: str
     @param symmetric_key_encrypted: str
 """
-@app.post("/register/")
+@app.post("/register")
 async def createNewUser(email: str, key_hash: str, key_hash_conf: str, symmetric_key_encrypted: str):
 
     user_data = (email,)
@@ -61,7 +61,7 @@ async def createNewUser(email: str, key_hash: str, key_hash_conf: str, symmetric
     return {"message": "User created successfully"}
 
 
-@app.get("/verify/")
+@app.get("/verify")
 async def email_verification(token: str):
     user = await getCurrentUserFromToken(token)
     if user and not user.verified:
@@ -76,7 +76,7 @@ async def email_verification(token: str):
     @param email: str
     @return user: User
 """
-@app.get("/get_user/", response_model=UserGet)
+@app.get("/get_user", response_model=UserGet)
 async def getUser(
     current_user: Annotated[User, Depends(getCurrentUserFromToken)]
 ):
@@ -128,14 +128,14 @@ async def getAccessToken(
     @param token: str
     @return TokenInfo
 """
-@app.get("/token_info/", response_model=TokenInfo)
+@app.get("/token_info", response_model=TokenInfo)
 def getTokenExpDate(token: str = Depends(oauth2_scheme)):
     decoded_token = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     expiration_timestamp = decoded_token['exp']
     return {"exp": expiration_timestamp}
 
 
-@app.get("/generate_auth_key/", response_model=AuthKey)
+@app.get("/generate_auth_key", response_model=AuthKey)
 async def generateAuthKey(
     current_user: Annotated[User, Depends(getCurrentUserFromToken)]
 ):
@@ -143,10 +143,11 @@ async def generateAuthKey(
     if current_user.twoFactorAuth != "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is already enabled")
 
-    return {"authKey": generateSecret()}
+    auth_key = generate_secret()
+    return {"authKey": auth_key, "url": generate_qrcode_url(auth_key, current_user.email)}
 
 
-@app.post("/enable_two_factor_auth/")
+@app.post("/enable_two_factor_auth")
 async def enableTwoFactorAuth(
     current_user: Annotated[User, Depends(getCurrentUserFromToken)],
     auth_key: str,
@@ -155,14 +156,14 @@ async def enableTwoFactorAuth(
     if current_user.twoFactorAuth != "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is already enabled")
 
-    if not verifyCode(auth_key, totp_code):
+    if not verify_code(auth_key, totp_code):
         raise HTTPException(status_code=400, detail="Invalid code")
 
     insertUpdateDeleteRequest(updateTwoFactorAuth(), (auth_key, True, current_user.email))
     return {"message": "Two-factor authentication enabled successfully"}
 
 
-@app.post("/check_two_factor_auth/")
+@app.post("/check_two_factor_auth")
 async def checkTwoFactorAuth(
     email: str,
     password: str,
@@ -174,7 +175,7 @@ async def checkTwoFactorAuth(
         raise HTTPException(status_code=400, detail="Incorrect username or password")
     if current_user.twoFactorAuth == "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
-    if not verifyCode(current_user.twoFactorAuth, totp_code):
+    if not verify_code(current_user.twoFactorAuth, totp_code):
         raise HTTPException(status_code=400, detail="Invalid code")
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -184,7 +185,7 @@ async def checkTwoFactorAuth(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.post("/disable_two_factor_auth/")
+@app.post("/disable_two_factor_auth")
 async def disableTwoFactorAuth(
     current_user: Annotated[User, Depends(getCurrentUserFromToken)]
 ):
@@ -195,7 +196,7 @@ async def disableTwoFactorAuth(
     return {"message": "Two-factor authentication disabled successfully"}
 
 
-@app.post("update_vault")
+@app.post("/update_vault")
 def updateVault(
     current_user: Annotated[User, Depends(getCurrentUserFromToken)],
     vault: str
@@ -205,7 +206,7 @@ def updateVault(
 
 
 
-@app.post("/reset_password/")
+@app.post("/reset_password")
 async def resetPassword(email: str):
     user_data = (email,)
     user = selectRequest(selectUser(), user_data)
@@ -216,7 +217,7 @@ async def resetPassword(email: str):
     return {"message": "Reset password email sent successfully"}
 
 
-@app.post("/password_forgotten/")
+@app.post("/password_forgotten")
 async def changePassword(
     token: str,
     password: str,
@@ -236,7 +237,7 @@ async def changePassword(
     return {"message": "Password changed successfully"}
 
 
-@app.get("/hibp_breaches/")
+@app.get("/hibp_breaches")
 async def getHIBPBreaches(
     current_user: Annotated[User, Depends(getCurrentUserFromToken)]
 ):
