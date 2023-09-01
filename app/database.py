@@ -141,3 +141,7 @@ def addRevokedToken():
 def checkTokenRevoked():
     return """SELECT EXISTS(SELECT 1 FROM duckpass."RevokedToken" WHERE token = %s)"""
 
+
+def deleteUser():
+    return """DELETE FROM duckpass."User" WHERE email = %s"""
+

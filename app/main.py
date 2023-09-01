@@ -259,4 +259,20 @@ async def logout(
     insertUpdateDeleteRequest(addRevokedToken(), (token,))
     return {"message": "Logout successful"}
 
+@app.post("/delete_account")
+async def deleteAccount(
+    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
+):
+    user = connection_info[0]
+    token_revocation = connection_info[1]
+
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    if token_revocation:
+        raise HTTPException(status_code=401, detail="Token already revoked")
+
+    insertUpdateDeleteRequest(deleteUser(), (user.email,))
+    return {"message": "Account deleted successfully"}
+
+
 
