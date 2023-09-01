@@ -114,6 +114,13 @@ async def getAccessToken(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    if not user.verified:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not verified",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     if user.hastwofactorauth == False:
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = createAccessToken(
@@ -175,6 +182,12 @@ async def checkTwoFactorAuth(
 
     if not current_user:
         raise HTTPException(status_code=400, detail="Incorrect username or password")
+    if not user.verified:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not verified",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     if current_user.twoFactorAuth == "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
     if not verify_code(current_user.twoFactorAuth, twoFactorAuthParams.totp_code):
