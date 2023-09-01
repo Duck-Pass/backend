@@ -134,10 +134,6 @@ def vaultUpdate():
     return """UPDATE duckpass."User" SET vault = %s WHERE email = %s"""
 
 
-def updatePassword():
-    return """UPDATE duckpass."User" SET keyHash = %s, symmetricKeyEncrypted = %s, salt = %s WHERE email = %s"""
-
-
 def addRevokedToken():
     return """INSERT INTO duckpass."RevokedToken" (token) VALUES (%s)"""
 
