@@ -232,38 +232,6 @@ def updateVault(
     return {"message": "Vault updated successfully"}
 
 
-
-@app.post("/reset_password")
-async def resetPassword(email: str):
-    user_data = (email,)
-    user = selectRequest(selectUser(), user_data)
-    if user is None:
-        raise HTTPException(status_code=400, detail="User does not exist")
-
-    await send_email(email, resetPasswordMail)
-    return {"message": "Reset password email sent successfully"}
-
-
-@app.post("/password_forgotten")
-async def changePassword(
-    token: str,
-    password: str,
-    password_conf: str,
-    sym_key: str
-):
-    if not password == password_conf:
-        raise HTTPException(status_code=400, detail="Passwords do not match")
-
-    user = await getCurrentUserFromToken(token)
-    if user is None:
-        raise HTTPException(status_code=400, detail="User does not exist")
-
-    salt, h = generate_master_key_hash(get_byte_from_base64(password))
-    insertUpdateDeleteRequest(updatePassword(), (b64encode(h).decode(), sym_key, b64encode(salt).decode(), user.email))
-
-    return {"message": "Password changed successfully"}
-
-
 @app.get("/hibp_breaches")
 async def getHIBPBreaches(
     connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
