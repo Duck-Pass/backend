@@ -182,7 +182,7 @@ async def checkTwoFactorAuth(
 
     if not current_user:
         raise HTTPException(status_code=400, detail="Incorrect username or password")
-    if not user.verified:
+    if not current_user.verified:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not verified",
@@ -228,7 +228,7 @@ def updateVault(
     if token_revocation:
         raise HTTPException(status_code=401, detail="Token revoked")
 
-    insertUpdateDeleteRequest(updateVault(), (bytes(vault.vault, 'utf-8'), current_user.email))
+    insertUpdateDeleteRequest(vaultUpdate(), (bytes(vault.vault, 'utf-8'), current_user.email))
     return {"message": "Vault updated successfully"}
 
 
