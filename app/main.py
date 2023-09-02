@@ -220,7 +220,7 @@ async def disableTwoFactorAuth(
 @app.post("/update_vault")
 def updateVault(
     connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)],
-    vault: Vault
+    vault: Optional[Vault] = None
 ):
     current_user = connection_info[0]
     token_revocation = connection_info[1]
@@ -228,7 +228,9 @@ def updateVault(
     if token_revocation:
         raise HTTPException(status_code=401, detail="Token revoked")
 
-    insertUpdateDeleteRequest(vaultUpdate(), (bytes(vault.vault, 'utf-8'), current_user.email))
+    vaultValue = bytes(vault.vault, 'utf-8') if vault.vault else None
+
+    insertUpdateDeleteRequest(vaultUpdate(), (vaultValue, current_user.email))
     return {"message": "Vault updated successfully"}
 
 
@@ -259,7 +261,7 @@ async def logout(
     insertUpdateDeleteRequest(addRevokedToken(), (token,))
     return {"message": "Logout successful"}
 
-@app.post("/delete_account")
+@app.delete("/delete_account")
 async def deleteAccount(
     connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
 ):
