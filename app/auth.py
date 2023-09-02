@@ -100,14 +100,19 @@ async def getCurrentUserFromToken(token: Annotated[str, Depends(oauth2_scheme)])
 
 
 def isTokenRevoked(token: str):
-    return selectRequest(checkTokenRevoked(), (token,))[0]
+
+    if selectRequest(checkTokenRevoked(), (token,))[0]:
+        raise HTTPException(status_code=401, detail="Token revoked")
 
 
-async def protectedEndpoints(token: Annotated[str, Depends(oauth2_scheme)]) -> Tuple[User, bool]:
+
+async def protectedEndpoints(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
+    isTokenRevoked(token)
     user = await getCurrentUserFromToken(token)
-    return user, isTokenRevoked(token)
+    return user
 
 
-async def protectedEndpointsToken(token: Annotated[str, Depends(oauth2_scheme)]) -> Tuple[bool, str]:
-    return isTokenRevoked(token), token
+async def protectedEndpointsToken(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
+    isTokenRevoked(token)
+    return token
 
