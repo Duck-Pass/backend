@@ -42,21 +42,22 @@ app.add_middleware(
     @param symmetric_key_encrypted: str
 """
 @app.post("/register")
-async def createNewUser(email: str, key_hash: str, key_hash_conf: str, symmetric_key_encrypted: str):
+async def createNewUser(userAuth : UserAuth):
 
-    user_data = (email,)
+    user_data = (userAuth.email,)
     user = selectRequest(selectUser(), user_data)
+
     if user is not None:
         raise HTTPException(status_code=400, detail="User already exists")
 
-    if not key_hash == key_hash_conf:
+    if not userAuth.keyHash == userAuth.keyHashConf:
         raise HTTPException(status_code=400, detail="Passwords do not match")
 
-    salt, h = generate_master_key_hash(get_byte_from_base64(key_hash))
+    salt, h = generate_master_key_hash(get_byte_from_base64(userAuth.keyHash))
 
-    user_data = (email, b64encode(h).decode(), symmetric_key_encrypted, b64encode(salt).decode())
+    user_data = (userAuth.email, b64encode(h).decode(), userAuth.symmetricKeyEncrypted, b64encode(salt).decode())
     insertUpdateDeleteRequest(insertUser(), user_data)
-    await send_email(email, confirmationMail)
+    await send_email(userAuth.email, confirmationMail)
 
     return {"message": "User created successfully"}
 
@@ -66,7 +67,7 @@ async def email_verification(token: str):
     user = await getCurrentUserFromToken(token)
     if user and not user.verified:
         insertUpdateDeleteRequest(updateVerification(), (user.email,))
-        redirect_url = f"https://{SITE}/#/verification"
+        redirect_url = f"https://{SITE}/#/account-verified"
         return RedirectResponse(url=redirect_url)
     raise HTTPException(status_code=400, detail="User already verified")
 
@@ -78,13 +79,8 @@ async def email_verification(token: str):
 """
 @app.get("/get_user", response_model=UserGet)
 async def getUser(
-    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
+    current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
 ):
-    current_user = connection_info[0]
-    token_revocation = connection_info[1]
-
-    if token_revocation:
-        raise HTTPException(status_code=401, detail="Token revoked")
 
     userGet = UserGet(
         id=current_user.id,
@@ -107,12 +103,6 @@ async def getAccessToken(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
     user = AuthenticateUser(form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
 
     if not user.verified:
         raise HTTPException(
@@ -137,14 +127,8 @@ async def getAccessToken(
 
 @app.get("/generate_auth_key", response_model=AuthKey)
 async def generateAuthKey(
-    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
+    current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
 ):
-    current_user = connection_info[0]
-    token_revocation = connection_info[1]
-
-    if token_revocation:
-        raise HTTPException(status_code=401, detail="Token revoked")
-
     if current_user.twoFactorAuth != "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is already enabled")
 
@@ -154,16 +138,10 @@ async def generateAuthKey(
 
 @app.post("/enable_two_factor_auth")
 async def enableTwoFactorAuth(
-    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)],
+    current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)],
     auth_key: str,
     totp_code: str
 ):
-    current_user = connection_info[0]
-    token_revocation = connection_info[1]
-
-    if token_revocation:
-        raise HTTPException(status_code=401, detail="Token revoked")
-
     if current_user.twoFactorAuth != "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is already enabled")
 
@@ -180,8 +158,6 @@ async def checkTwoFactorAuth(
 ):
     current_user = AuthenticateUser(twoFactorAuthParams.username, twoFactorAuthParams.password)
 
-    if not current_user:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
     if not current_user.verified:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -202,14 +178,8 @@ async def checkTwoFactorAuth(
 
 @app.post("/disable_two_factor_auth")
 async def disableTwoFactorAuth(
-        connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
+        current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
 ):
-    current_user = connection_info[0]
-    token_revocation = connection_info[1]
-
-    if token_revocation:
-        raise HTTPException(status_code=401, detail="Token revoked")
-
     if current_user.twoFactorAuth == "0":
         raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
 
@@ -217,17 +187,11 @@ async def disableTwoFactorAuth(
     return {"message": "Two-factor authentication disabled successfully"}
 
 
-@app.post("/update_vault")
+@app.put("/update_vault")
 def updateVault(
-    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)],
+    current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)],
     vault: Optional[Vault] = None
 ):
-    current_user = connection_info[0]
-    token_revocation = connection_info[1]
-
-    if token_revocation:
-        raise HTTPException(status_code=401, detail="Token revoked")
-
     vaultValue = bytes(vault.vault, 'utf-8') if vault.vault else None
 
     insertUpdateDeleteRequest(vaultUpdate(), (vaultValue, current_user.email))
@@ -236,45 +200,49 @@ def updateVault(
 
 @app.get("/hibp_breaches")
 async def getHIBPBreaches(
-    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
+    current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
 ):
-    current_user = connection_info[0]
-    token_revocation = connection_info[1]
-
-    if token_revocation:
-        raise HTTPException(status_code=401, detail="Token revoked")
-
     json_data = await getBreachesForUser(current_user.email)
     return Response(content=json.dumps(json_data), media_type="application/json")
 
 
 @app.post("/logout")
 async def logout(
-    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpointsToken)]
+    token: Annotated[SecureEndpointParams, Depends(protectedEndpointsToken)]
 ):
-    token_revocation = connection_info[0]
-    token = connection_info[1]
-
-    if token_revocation:
-        raise HTTPException(status_code=401, detail="Token already revoked")
-
     insertUpdateDeleteRequest(addRevokedToken(), (token,))
     return {"message": "Logout successful"}
 
 @app.delete("/delete_account")
 async def deleteAccount(
-    connection_info: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
+    current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
 ):
-    user = connection_info[0]
-    token_revocation = connection_info[1]
-
-    if not user:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    if token_revocation:
-        raise HTTPException(status_code=401, detail="Token already revoked")
-
-    insertUpdateDeleteRequest(deleteUser(), (user.email,))
+    insertUpdateDeleteRequest(deleteUser(), (current_user.email,))
     return {"message": "Account deleted successfully"}
 
+
+@app.put("/update_email")
+async def updateEmail(
+    current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)],
+    newUserEmail: UserUniqueId
+):
+    insertUpdateDeleteRequest(updateUserEmail(), (newUserEmail.email, current_user.email))
+    return {"message": "Email updated successfully"}
+
+
+@app.put("/update_password")
+async def updatePassword(
+    current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)],
+    userAuth: UserAuth,
+    vault: Optional[Vault] = None
+):
+    if not userAuth.keyHash == userAuth.keyHashConf:
+        raise HTTPException(status_code=400, detail="Passwords do not match")
+
+    salt, h = generate_master_key_hash(get_byte_from_base64(userAuth.keyHash))
+    vaultValue = bytes(vault.vault, 'utf-8') if vault.vault else None
+    insertUpdateDeleteRequest(passwordUpdate(), (b64encode(h).decode(), userAuth.symmetricKeyEncrypted, b64encode(salt).decode(), vaultValue, current_user.email))
+
+    return {"message": "Password changed successfully"}
 
 
