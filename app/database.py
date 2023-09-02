@@ -145,3 +145,11 @@ def checkTokenRevoked():
 def deleteUser():
     return """DELETE FROM duckpass."User" WHERE email = %s"""
 
+
+def updateUserEmail():
+    return """UPDATE duckpass."User" SET email = %s WHERE email = %s"""
+
+
+def passwordUpdate():
+    return """UPDATE duckpass."User" SET keyHash = %s, symmetricKeyEncrypted = %s, salt = %s, vault = %s WHERE email = %s"""
+

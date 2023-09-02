@@ -13,12 +13,24 @@ class User(BaseModel):
     verified: bool
     vault: Optional[bytes]
 
+
 class UserGet(BaseModel):
     id: int
     email: str
     symmetricKeyEncrypted: str
     hasTwoFactorAuth: bool
     vault: Optional[str]
+
+
+class UserAuth(BaseModel):
+    email: Optional[str]
+    keyHash: str
+    keyHashConf: str
+    symmetricKeyEncrypted: str
+
+
+class UserUniqueId(BaseModel):
+    email: str
 
 
 class Token(BaseModel):
@@ -39,8 +51,6 @@ class TwoFactorAuthConnectionParams(BaseModel):
 
 class Vault(BaseModel):
     vault: str
-
-
 
 
 class SecureEndpointParams(BaseModel):
