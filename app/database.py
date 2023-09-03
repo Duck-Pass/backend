@@ -26,7 +26,8 @@ dbpool = psycopg2.pool.ThreadedConnectionPool(dbname=dbname,
 @contextmanager
 def db_cursor():
     """
-        Create and manage database access
+    Context manager for database cursor
+    :return: Database cursor
     """
 
     conn = dbpool.getconn()
@@ -43,7 +44,8 @@ def db_cursor():
 
 def create_database():
     """
-        Execute database creation
+    Create database
+    :return: None
     """
     with db_cursor() as cur:
         cur.execute(database())
@@ -51,10 +53,10 @@ def create_database():
 
 def select_request(req, values):
     """
-        Execute select requests
-        @param req: str
-        @param values: tuple
-        @return select result
+    Execute select request
+    :param str req: Select request to execute
+    :param tuples values: Values to insert in the request
+    :return: Result of the request
     """
     with db_cursor() as cur:
         cur.execute(req, values)
@@ -63,9 +65,10 @@ def select_request(req, values):
 
 def insert_update_delete_request(req, values):
     """
-        Execute insert and update requests
-        @param req: str
-        @param values: tuple
+    Execute insert, update or delete request
+    :param str req: Request to execute
+    :param tuples values: Values to insert in the request
+    :return: None
     """
     with db_cursor() as cur:
         cur.execute(req, values)
@@ -73,7 +76,8 @@ def insert_update_delete_request(req, values):
 
 def database():
     """
-        Database request
+    Database architecture request
+    :return: Database request
     """
 
     return """
@@ -109,7 +113,8 @@ def database():
 
 def select_user():
     """
-        Request to select user
+    Request to select user
+    :return: Request
     """
 
     return """SELECT userid, email, keyhash, symmetrickeyencrypted, salt, hastwofactorauth, twofactorauth, verified, vault  FROM duckpass."User" WHERE email = %s"""
@@ -117,39 +122,80 @@ def select_user():
 
 def insert_user():
     """
-        Request to insert user
+    Request to insert user
+    :return: Request
     """
 
     return """INSERT INTO duckpass."User" (email, keyHash, symmetricKeyEncrypted, salt) VALUES (%s, %s, %s, %s)"""
 
 
 def update_two_factor_auth():
+    """
+    Request to update two-factor auth
+    :return: Request
+    """
+
     return """UPDATE duckpass."User" SET twoFactorAuth = %s, hasTwoFactorAuth = %s WHERE email = %s"""
 
 
 def update_verification():
+    """
+    Request to update verification status of a user
+    :return: Request
+    """
+
     return """UPDATE duckpass."User" SET verified = TRUE WHERE email = %s"""
 
 
 def vault_update():
+    """
+    Request to update vault
+    :return: Request
+    """
+
     return """UPDATE duckpass."User" SET vault = %s WHERE email = %s"""
 
 
 def add_revoked_token():
+    """
+    Request to add revoked token
+    :return: Request
+    """
+
     return """INSERT INTO duckpass."RevokedToken" (token) VALUES (%s)"""
 
 
 def check_token_revoked():
+    """
+    Request to check if token is revoked
+    :return: Request
+    """
+
     return """SELECT EXISTS(SELECT 1 FROM duckpass."RevokedToken" WHERE token = %s)"""
 
 
 def delete_user():
+    """
+    Request to delete user
+    :return: Request
+    """
+
     return """DELETE FROM duckpass."User" WHERE email = %s"""
 
 
 def update_user_email():
+    """
+    Request to update user email
+    :return: Request
+    """
+
     return """UPDATE duckpass."User" SET email = %s WHERE email = %s"""
 
 
 def password_update():
+    """
+    Request to update password
+    :return: Request
+    """
+
     return """UPDATE duckpass."User" SET keyHash = %s, symmetricKeyEncrypted = %s, salt = %s, vault = %s WHERE email = %s"""

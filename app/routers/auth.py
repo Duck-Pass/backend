@@ -13,9 +13,9 @@ async def get_access_token(
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ):
     """
-        Endpoint to get access token
-        @param form_data: OAuth2PasswordRequestForm
-        @return Token
+    Get access token
+    :param str form_data: username and password
+    :return: access token
     """
     current_user = authenticate_user(form_data.username, form_data.password)
 

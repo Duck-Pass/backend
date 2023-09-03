@@ -15,6 +15,14 @@ conf = ConnectionConfig(
 
 
 async def send_email(mail: str, mail_template: Callable[[str], tuple]):
+    """
+    Sends an email to the given mail address with the given template
+    :param str mail: Mail address to send the email to
+    :param Function mail_template: Function that returns a tuple with the subject and the template
+    :return: None
+    """
+
+    # Create token to identify the user in the email
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": mail}, expires_delta=access_token_expires

@@ -16,13 +16,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")  # Token url on API
 
 def get_user_from_db(email: str):
     """
-       Get user from database
-       @param email: str
-       @return current_user: tuple
+    Get user from database based on email
+    :param str email: User's email to get from database
+    :return: User's data
     """
 
     user_data = (email,)
     current_user = select_request(select_user(), user_data)
+
     if current_user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     if current_user[-1] is not None:
@@ -45,27 +46,29 @@ def get_user_from_db(email: str):
 
 def authenticate_user(email: str, key_hash: str):
     """
-        Authenticate user, compare entered password with password in database
-        @param email: str
-        @param key_hash: str
-        @return current_user: tuple
+    Authenticate user with email and key hash (password)
+    :param str email: User's email
+    :param str key_hash: User's key hash (password)
+    :return: User's data if credentials are valid
     """
 
     current_user = get_user_from_db(email)
+
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
     if not verify_master_key_hash(get_byte_from_base64(key_hash), get_byte_from_base64(current_user.salt),
                                   get_byte_from_base64(current_user.key_hash)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+
     return current_user
 
 
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
     """
-        Create access token
-        @param data: dict
-        @param expires_delta: timedelta
-        @return encoded_jwt: str
+    Create access token
+    :param dict data: Data to encode in token (user's email)
+    :param expires_delta: Token expiration time
+    :return: JWT token for user authentication
     """
     to_encode = data.copy()
     if expires_delta:
@@ -79,9 +82,9 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
 
 async def get_current_user_from_token(token: Annotated[str, Depends(oauth2_scheme)]):
     """
-        Get current user from token
-        @param token: str
-        @return current_user: tuple
+    Get current user from token
+    :param str token: JWT token for user authentication
+    :return: User's data if token is valid
     """
 
     credentials_exception = HTTPException(
@@ -89,6 +92,8 @@ async def get_current_user_from_token(token: Annotated[str, Depends(oauth2_schem
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    # Decoding token and checking if the content (email) corresponds to a user in the database
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
@@ -103,16 +108,31 @@ async def get_current_user_from_token(token: Annotated[str, Depends(oauth2_schem
 
 
 def is_token_revoked(token: str):
+    """
+    Check if token is revoked in the database
+    :param str token: JWT token for user authentication
+    :return: None
+    """
     if select_request(check_token_revoked(), (token,))[0]:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked")
 
 
 async def protected_endpoints(token: Annotated[str, Depends(oauth2_scheme)]) -> User:
+    """
+    Get current user from token
+    :param str token: JWT token for user authentication
+    :return: User's data if token is valid
+    """
     is_token_revoked(token)
     current_user = await get_current_user_from_token(token)
     return current_user
 
 
 async def protected_endpoints_token(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
+    """
+    Get current user from token
+    :param str token: JWT token for user authentication
+    :return: Received token
+    """
     is_token_revoked(token)
     return token
