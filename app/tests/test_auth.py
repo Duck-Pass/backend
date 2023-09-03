@@ -4,7 +4,7 @@ from app.auth import *
 def test_token_generation():
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = createAccessToken(
+    access_token = create_access_token(
         data={"sub": "Test"}, expires_delta=access_token_expires
     )
 
