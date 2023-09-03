@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from ..mail import *
+from ..model import *
 
 router = APIRouter(
     tags=["Authentication"]

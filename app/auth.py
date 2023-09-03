@@ -1,9 +1,8 @@
 from datetime import timedelta, datetime
 from fastapi import HTTPException, Depends, status
-from typing import Annotated, Union, Tuple, Any, Coroutine
+from typing import Annotated, Union
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from .model import *
 from .database import *
 from .crypto import *
 from .model import User
@@ -24,7 +23,7 @@ def getUserFromDB(email: str):
    user_data = (email,)
    user = selectRequest(selectUser(), user_data)
    if user is None:
-       raise HTTPException(status_code=404, detail="User not found")
+       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
    if user[-1] is not None:
        user = user[:-1] + (byteaToText(user[-1]),)
 
@@ -52,9 +51,9 @@ def getUserFromDB(email: str):
 def AuthenticateUser(email: str, password: str):
     user = getUserFromDB(email)
     if not user:
-        return False
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
     if not verify_master_key_hash(get_byte_from_base64(password), get_byte_from_base64(user.salt), get_byte_from_base64(user.keyHash)):
-        return False
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
     return user
 
 
@@ -102,7 +101,7 @@ async def getCurrentUserFromToken(token: Annotated[str, Depends(oauth2_scheme)])
 def isTokenRevoked(token: str):
 
     if selectRequest(checkTokenRevoked(), (token,))[0]:
-        raise HTTPException(status_code=401, detail="Token revoked")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked")
 
 
 

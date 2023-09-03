@@ -3,6 +3,7 @@ import json
 from starlette.responses import Response
 from ..hibp import *
 from ..mail import *
+from ..model import *
 
 router = APIRouter(
     tags=["HIBP Integration"]

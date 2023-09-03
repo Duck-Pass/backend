@@ -4,6 +4,7 @@ from base64 import b64encode
 from ..mail import *
 from ..crypto import *
 from ..templates.mailTemplate import *
+from ..model import *
 
 SITE = os.environ.get('SITE')
 
@@ -25,10 +26,10 @@ async def createNewUser(userAuth : UserAuth):
     user = selectRequest(selectUser(), user_data)
 
     if user is not None:
-        raise HTTPException(status_code=400, detail="User already exists")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
 
     if not userAuth.keyHash == userAuth.keyHashConf:
-        raise HTTPException(status_code=400, detail="Passwords do not match")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Passwords do not match")
 
     salt, h = generate_master_key_hash(get_byte_from_base64(userAuth.keyHash))
 
@@ -46,7 +47,7 @@ async def email_verification(token: str):
         insertUpdateDeleteRequest(updateVerification(), (user.email,))
         redirect_url = f"https://{SITE}/#/account-verified"
         return RedirectResponse(url=redirect_url)
-    raise HTTPException(status_code=400, detail="User already verified")
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already verified")
 
 
 """
@@ -97,7 +98,7 @@ async def updatePassword(
     vault: Optional[Vault] = None
 ):
     if not userAuth.keyHash == userAuth.keyHashConf:
-        raise HTTPException(status_code=400, detail="Passwords do not match")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Passwords do not match")
 
     salt, h = generate_master_key_hash(get_byte_from_base64(userAuth.keyHash))
     vaultValue = bytes(vault.vault, 'utf-8') if vault.vault else None
