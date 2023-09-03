@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from ..twoFactorAuth import *
 from ..mail import *
+from ..model import *
 
 router = APIRouter(
     tags=["Two Factor Authentication"]
@@ -11,7 +12,7 @@ async def generateAuthKey(
     current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
 ):
     if current_user.twoFactorAuth != "0":
-        raise HTTPException(status_code=400, detail="Two-factor authentication is already enabled")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Two-factor authentication is already enabled")
 
     auth_key = generate_secret()
     return {"authKey": auth_key, "url": generate_qrcode_url(auth_key, current_user.email)}
@@ -24,10 +25,10 @@ async def enableTwoFactorAuth(
     totp_code: str
 ):
     if current_user.twoFactorAuth != "0":
-        raise HTTPException(status_code=400, detail="Two-factor authentication is already enabled")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Two-factor authentication is already enabled")
 
     if not verify_code(auth_key, totp_code):
-        raise HTTPException(status_code=400, detail="Invalid code")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid code")
 
     insertUpdateDeleteRequest(updateTwoFactorAuth(), (auth_key, True, current_user.email))
     return {"message": "Two-factor authentication enabled successfully"}
@@ -46,9 +47,9 @@ async def checkTwoFactorAuth(
             headers={"WWW-Authenticate": "Bearer"},
         )
     if current_user.twoFactorAuth == "0":
-        raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Two-factor authentication is not enabled")
     if not verify_code(current_user.twoFactorAuth, twoFactorAuthParams.totp_code):
-        raise HTTPException(status_code=400, detail="Invalid code")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid code")
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = createAccessToken(
@@ -62,7 +63,7 @@ async def disableTwoFactorAuth(
         current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
 ):
     if current_user.twoFactorAuth == "0":
-        raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Two-factor authentication is not enabled")
 
     insertUpdateDeleteRequest(updateTwoFactorAuth(), ("0", False, current_user.email))
     return {"message": "Two-factor authentication disabled successfully"}
