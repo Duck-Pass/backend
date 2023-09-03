@@ -4,7 +4,6 @@ from Crypto.Random import get_random_bytes
 from base64 import b64decode
 from binascii import Error as BinasciiError
 
-
 PBKDF_NUM_ITERATIONS = 600_000
 SALT_LEN = 16
 

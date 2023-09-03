@@ -11,8 +11,8 @@ router = APIRouter(
 
 
 @router.get("/hibp_breaches")
-async def getHIBPBreaches(
-    current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
+async def get_hibp_breaches(
+    current_user: Annotated[SecureEndpointParams, Depends(protected_endpoints)]
 ):
-    json_data = await getBreachesForUser(current_user.email)
+    json_data = await get_breaches_for_user(current_user.email)
     return Response(content=json.dumps(json_data), media_type="application/json")

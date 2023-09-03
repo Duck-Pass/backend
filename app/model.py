@@ -5,11 +5,11 @@ from typing import Optional
 class User(BaseModel):
     id: int
     email: str
-    keyHash: str
-    symmetricKeyEncrypted: str
+    key_hash: str
+    symmetric_key_encrypted: str
     salt: str
-    hastwofactorauth: bool
-    twoFactorAuth: str
+    has_two_factor_auth: bool
+    two_factor_auth: str
     verified: bool
     vault: Optional[bytes]
 
@@ -17,16 +17,16 @@ class User(BaseModel):
 class UserGet(BaseModel):
     id: int
     email: str
-    symmetricKeyEncrypted: str
-    hasTwoFactorAuth: bool
+    symmetric_key_encrypted: str
+    has_two_factor_auth: bool
     vault: Optional[str]
 
 
 class UserAuth(BaseModel):
     email: Optional[str]
-    keyHash: str
-    keyHashConf: str
-    symmetricKeyEncrypted: str
+    key_hash: str
+    key_hash_conf: str
+    symmetric_key_encrypted: str
 
 
 class UserUniqueId(BaseModel):
@@ -39,13 +39,13 @@ class Token(BaseModel):
 
 
 class AuthKey(BaseModel):
-    authKey: str
+    auth_key: str
     url: str
 
 
 class TwoFactorAuthConnectionParams(BaseModel):
     username: str
-    password: str
+    key_hash: str
     totp_code: str
 
 

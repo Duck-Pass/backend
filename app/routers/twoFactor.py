@@ -7,38 +7,39 @@ router = APIRouter(
     tags=["Two Factor Authentication"]
 )
 
+
 @router.get("/generate_auth_key", response_model=AuthKey)
-async def generateAuthKey(
-    current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
+async def generate_auth_key(
+        current_user: Annotated[SecureEndpointParams, Depends(protected_endpoints)]
 ):
-    if current_user.twoFactorAuth != "0":
+    if current_user.has_two_factor_auth:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Two-factor authentication is already enabled")
 
     auth_key = generate_secret()
-    return {"authKey": auth_key, "url": generate_qrcode_url(auth_key, current_user.email)}
+    return {"auth_key": auth_key, "url": generate_qrcode_url(auth_key, current_user.email)}
 
 
 @router.post("/enable_two_factor_auth")
-async def enableTwoFactorAuth(
-    current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)],
+async def enable_two_factor_auth(
+    current_user: Annotated[SecureEndpointParams, Depends(protected_endpoints)],
     auth_key: str,
     totp_code: str
 ):
-    if current_user.twoFactorAuth != "0":
+    if current_user.has_two_factor_auth:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Two-factor authentication is already enabled")
 
     if not verify_code(auth_key, totp_code):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid code")
 
-    insertUpdateDeleteRequest(updateTwoFactorAuth(), (auth_key, True, current_user.email))
+    insert_update_delete_request(update_two_factor_auth(), (auth_key, True, current_user.email))
     return {"message": "Two-factor authentication enabled successfully"}
 
 
 @router.post("/check_two_factor_auth")
-async def checkTwoFactorAuth(
-    twoFactorAuthParams: TwoFactorAuthConnectionParams
+async def check_two_factor_auth(
+    two_factor_auth_params: TwoFactorAuthConnectionParams
 ):
-    current_user = AuthenticateUser(twoFactorAuthParams.username, twoFactorAuthParams.password)
+    current_user = authenticate_user(two_factor_auth_params.username, two_factor_auth_params.key_hash)
 
     if not current_user.verified:
         raise HTTPException(
@@ -46,24 +47,24 @@ async def checkTwoFactorAuth(
             detail="User not verified",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    if current_user.twoFactorAuth == "0":
+    if not current_user.has_two_factor_auth:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Two-factor authentication is not enabled")
-    if not verify_code(current_user.twoFactorAuth, twoFactorAuthParams.totp_code):
+    if not verify_code(current_user.two_factor_auth, two_factor_auth_params.totp_code):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid code")
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = createAccessToken(
+    access_token = create_access_token(
         data={"sub": current_user.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.post("/disable_two_factor_auth")
-async def disableTwoFactorAuth(
-        current_user: Annotated[SecureEndpointParams, Depends(protectedEndpoints)]
+async def disable_two_factor_auth(
+        current_user: Annotated[SecureEndpointParams, Depends(protected_endpoints)]
 ):
-    if current_user.twoFactorAuth == "0":
+    if not current_user.has_two_factor_auth:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Two-factor authentication is not enabled")
 
-    insertUpdateDeleteRequest(updateTwoFactorAuth(), ("0", False, current_user.email))
+    insert_update_delete_request(update_two_factor_auth(), ("0", False, current_user.email))
     return {"message": "Two-factor authentication disabled successfully"}

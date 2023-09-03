@@ -3,7 +3,7 @@ import psycopg2.pool
 from urllib import parse
 from contextlib import contextmanager
 
-database_url = os.environ['DATABASE_URL']           # Database URL for connection
+database_url = os.environ['DATABASE_URL']  # Database URL for connection
 
 # Parsing database URL
 parse_result = parse.urlparse(database_url)
@@ -23,56 +23,59 @@ dbpool = psycopg2.pool.ThreadedConnectionPool(dbname=dbname,
                                               maxconn=20)
 
 
-"""
-    Create and manage database access
-"""
 @contextmanager
 def db_cursor():
+    """
+        Create and manage database access
+    """
+
     conn = dbpool.getconn()
     try:
         with conn.cursor() as cur:
             yield cur
             conn.commit()
-    except:
+    except Exception:
         conn.rollback()
         raise
     finally:
         dbpool.putconn(conn)
 
-"""
-    Execute database creation
-"""
-def createDatabase():
+
+def create_database():
+    """
+        Execute database creation
+    """
     with db_cursor() as cur:
         cur.execute(database())
 
 
-"""
-    Execute select requests
-    @param req: str 
-    @param values: tuple
-    @return select result
-"""
-def selectRequest(req, values):
+def select_request(req, values):
+    """
+        Execute select requests
+        @param req: str
+        @param values: tuple
+        @return select result
+    """
     with db_cursor() as cur:
         cur.execute(req, values)
         return cur.fetchone()
 
 
-"""
-    Execute insert and update requests
-    @param req: str
-    @param values: tuple
-"""
-def insertUpdateDeleteRequest(req, values):
+def insert_update_delete_request(req, values):
+    """
+        Execute insert and update requests
+        @param req: str
+        @param values: tuple
+    """
     with db_cursor() as cur:
         cur.execute(req, values)
 
 
-"""
-    Database request
-"""
 def database():
+    """
+        Database request
+    """
+
     return """
      DROP SCHEMA IF EXISTS duckpass CASCADE;
      CREATE SCHEMA duckpass;
@@ -104,52 +107,49 @@ def database():
      """
 
 
-"""
-    Request to select user
-"""
-def selectUser():
+def select_user():
+    """
+        Request to select user
+    """
+
     return """SELECT userid, email, keyhash, symmetrickeyencrypted, salt, hastwofactorauth, twofactorauth, verified, vault  FROM duckpass."User" WHERE email = %s"""
 
 
-"""
-    Request to insert user
-"""
-def insertUser():
+def insert_user():
+    """
+        Request to insert user
+    """
+
     return """INSERT INTO duckpass."User" (email, keyHash, symmetricKeyEncrypted, salt) VALUES (%s, %s, %s, %s)"""
 
 
-def deleteUser():
-    return """DELETE FROM duckpass."User" WHERE email = %s"""
-
-
-def updateTwoFactorAuth():
+def update_two_factor_auth():
     return """UPDATE duckpass."User" SET twoFactorAuth = %s, hasTwoFactorAuth = %s WHERE email = %s"""
 
 
-def updateVerification():
+def update_verification():
     return """UPDATE duckpass."User" SET verified = TRUE WHERE email = %s"""
 
 
-def vaultUpdate():
+def vault_update():
     return """UPDATE duckpass."User" SET vault = %s WHERE email = %s"""
 
 
-def addRevokedToken():
+def add_revoked_token():
     return """INSERT INTO duckpass."RevokedToken" (token) VALUES (%s)"""
 
 
-def checkTokenRevoked():
+def check_token_revoked():
     return """SELECT EXISTS(SELECT 1 FROM duckpass."RevokedToken" WHERE token = %s)"""
 
 
-def deleteUser():
+def delete_user():
     return """DELETE FROM duckpass."User" WHERE email = %s"""
 
 
-def updateUserEmail():
+def update_user_email():
     return """UPDATE duckpass."User" SET email = %s WHERE email = %s"""
 
 
-def passwordUpdate():
+def password_update():
     return """UPDATE duckpass."User" SET keyHash = %s, symmetricKeyEncrypted = %s, salt = %s, vault = %s WHERE email = %s"""
-

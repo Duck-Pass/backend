@@ -4,7 +4,7 @@ import os
 HIBP_API_KEY = os.environ.get("HIBP_API_KEY")
 
 
-async def getBreachesForUser(email):
+async def get_breaches_for_user(email):
 
     # Set the API key prior to using the functions which require it.
     pyhibp.set_api_key(key=HIBP_API_KEY)
