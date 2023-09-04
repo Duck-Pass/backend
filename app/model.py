@@ -72,7 +72,7 @@ class TwoFactorAuthConnectionParams(BaseModel):
     Represents the params passed by the client when the user uses two-factor authentication at login
     """
 
-    username: str
+    email: str
     key_hash: str
     totp_code: str
 
