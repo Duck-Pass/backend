@@ -41,14 +41,6 @@ class UserAuth(BaseModel):
     symmetric_key_encrypted: str
 
 
-class UserUniqueId(BaseModel):
-    """
-    Represents the unique identifier of a user in database
-    """
-
-    email: str
-
-
 class Token(BaseModel):
     """
     Represents the token value and type for a JWT token
