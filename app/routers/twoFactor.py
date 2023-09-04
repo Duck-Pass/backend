@@ -59,7 +59,7 @@ async def check_two_factor_auth(
     :return: Access token
     """
 
-    current_user = authenticate_user(two_factor_auth_params.username, two_factor_auth_params.key_hash)
+    current_user = authenticate_user(two_factor_auth_params.email, two_factor_auth_params.key_hash)
 
     if not current_user.verified:
         raise HTTPException(
