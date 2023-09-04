@@ -4,7 +4,12 @@ SITE = os.environ.get('SITE')
 API = os.environ.get('API')
 
 
-def confirmationMail(token):
+def confirmation_mail(token):
+    """
+    Generates the HTML for the confirmation email
+    :param str token: The token to be used for the confirmation
+    :return: Tuple with subject of the mail and the HTML for the confirmation email
+    """
 
     return "DuckPass Account Verification", f"""
         <!DOCTYPE html>
