@@ -103,17 +103,30 @@ def update_vault(
 @router.put("/update_email")
 async def update_email(
     current_user: Annotated[SecureEndpointParams, Depends(protected_endpoints)],
-    new_user_email: UserUniqueId
+    user_auth: UserAuth,
+    vault: Optional[Vault] = None
 ):
     """
     Update user's email
     :param User current_user: User's data
+    :param UserAuth user_auth: User's authentication data
     :param UserUniqueId new_user_email: new user email
+    :param Vault vault: User's vault
     :return: Confirmation message
     """
+    if check_user_exists(user_auth.email):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
 
-    insert_update_delete_request(update_user_email(), (new_user_email.email, current_user.email))
-    return {"message": "Email updated successfully"}
+    insert_update_delete_request(update_user_email(), (user_auth.email, current_user.email))
+
+    # Recalculate the hash of the new password and generate a new salt
+    salt, h = generate_master_key_hash(get_byte_from_base64(user_auth.key_hash))
+
+    # Update the vault to be encrypted with the new password
+    vault_content = bytes(vault.vault, 'utf-8') if vault.vault else None
+    insert_update_delete_request(password_update(), (b64encode(h).decode(), user_auth.symmetric_key_encrypted, b64encode(salt).decode(), vault_content, user_auth.email))
+
+    return {"message": "Email address changed successfully"}
 
 
 @router.put("/update_password")

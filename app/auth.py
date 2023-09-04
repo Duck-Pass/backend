@@ -14,6 +14,17 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ['ACCESS_TOKEN_EXPIRE_MINUTES'])  # 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")  # Token url on API
 
 
+def check_user_exists(email: str):
+    """
+    Checks if the given email is already in the database
+    :param str email: Email to check
+    :return: True if the user exists, False otherwise
+    """
+    user_data = (email,)
+    current_user = select_request(select_user(), user_data)
+    return current_user is not None
+
+
 def get_user_from_db(email: str):
     """
     Get user from database based on email
