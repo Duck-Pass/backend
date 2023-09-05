@@ -23,7 +23,7 @@ MOCK_USER2 = UserAuth(
     symmetric_key_encrypted="aOZs9oeut12RsmlvbIrSRw==|ye3ZZ73DbOjvX00Al3OTPYRqqNvhLaP9Wq5dFtfI01Yyzhq0zI9KzEDfZ9lygnlPgkX5JkwMsMSulB7DCNSOgmUy3F9uNrcsVOJFKdqZ//Y=|gnixW1eVwBOJUH/hHYAOE/02YTjE3Qty2DylmDGeRKk="
 )
 
-API = "https://api-staging.duckpass.ch"
+pytest.API = "https://api-staging.duckpass.ch"
 
 
 def login(username, password):
@@ -33,7 +33,7 @@ def login(username, password):
     :param password: Password used for the login
     :return: Status code of the response
     """
-    url = f"{API}/token"
+    url = f"{pytest.API}/token"
 
     data = {
         "grant_type": "",
@@ -61,7 +61,7 @@ def get_user(token):
     :param token: Token used to authenticate the user
     :return: Status code of the response
     """
-    url = f"{API}/get_user"
+    url = f"{pytest.API}/get_user"
 
     headers = {
         "Authorization": "Bearer " + token,
@@ -72,13 +72,13 @@ def get_user(token):
     return response.status_code
 
 
-@pytest.mark.run(order=1)
+@pytest.mark.run(order=8)
 def test_api_register():
     """
     Function to test the register endpoint with a new user
     """
 
-    url = f"{API}/register"
+    url = f"{pytest.API}/register"
 
     data = {
         "email": MOCK_USER.email,
@@ -98,13 +98,13 @@ def test_api_register():
     assert response.status_code == 200
 
 
-@pytest.mark.run(order=1)
+@pytest.mark.run(order=9)
 def test_api_register_an_existing_user():
     """
     Function to test the register endpoint with an existing user
     """
 
-    url = f"{API}/register"
+    url = f"{pytest.API}/register"
 
     data = {
         "email": MOCK_USER.email,
@@ -123,7 +123,7 @@ def test_api_register_an_existing_user():
     assert response.status_code == 400
 
 
-@pytest.mark.run(order=2)
+@pytest.mark.run(order=10)
 def test_api_login():
     """
     Function to test the login endpoint with an existing user
@@ -131,7 +131,7 @@ def test_api_login():
     assert login(MOCK_USER.email, MOCK_USER.key_hash) == 200
 
 
-@pytest.mark.run(order=2)
+@pytest.mark.run(order=11)
 def test_api_login_with_bad_credentials():
     """
     Function to test the login endpoint with bad credentials
@@ -139,7 +139,7 @@ def test_api_login_with_bad_credentials():
     assert login(MOCK_USER2.email, MOCK_USER2.key_hash) == 404
 
 
-@pytest.mark.run(order=3)
+@pytest.mark.run(order=12)
 def test_get_user():
     """
     Function to test the get_user endpoint with a valid token
@@ -147,7 +147,7 @@ def test_get_user():
     assert get_user(pytest.token) == 200
 
 
-@pytest.mark.run(order=3)
+@pytest.mark.run(order=13)
 def test_get_user_non_existing():
     """
     Function to test the get_user endpoint with a random token
@@ -157,12 +157,12 @@ def test_get_user_non_existing():
     assert get_user(''.join(random.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(len(pytest.token)))) == 401
 
 
-@pytest.mark.run(order=4)
+@pytest.mark.run(order=16)
 def test_update_vault():
     """
     Function to test the update_vault endpoint
     """
-    url = f"{API}/update_vault"
+    url = f"{pytest.API}/update_vault"
 
 
     data = {
@@ -180,13 +180,13 @@ def test_update_vault():
     assert response.status_code == 200
 
 
-@pytest.mark.run(order=5)
+@pytest.mark.run(order=17)
 def test_update_email():
     """
     Function to test the update_email endpoint
     """
 
-    url = f"{API}/update_email"
+    url = f"{pytest.API}/update_email"
 
     data = {
         "user_auth": {
@@ -212,13 +212,13 @@ def test_update_email():
     assert login(MOCK_USER2.email, MOCK_USER2.key_hash) == 200
 
 
-@pytest.mark.run(order=6)
+@pytest.mark.run(order=18)
 def test_update_password():
     """
     Function to test the update_password endpoint
     """
 
-    url = f"{API}/update_password"
+    url = f"{pytest.API}/update_password"
 
     data = {
         "user_auth": {
@@ -244,13 +244,13 @@ def test_update_password():
 
 
 # test logout
-@pytest.mark.run(order=7)
+@pytest.mark.run(order=19)
 def test_logout():
     """
     Function to test the logout endpoint
     """
 
-    url = f"{API}/logout"
+    url = f"{pytest.API}/logout"
     headers = {
         "Authorization": "Bearer " + pytest.token,
         "accept": "application/json"
@@ -262,13 +262,13 @@ def test_logout():
     assert login(MOCK_USER2.email, MOCK_USER.key_hash) == 200
 
 
-@pytest.mark.run(order=8)
+@pytest.mark.run(order=20)
 def test_delete_user():
     """
     Function to test the delete_user endpoint
     """
 
-    url = f"{API}/delete_account"
+    url = f"{pytest.API}/delete_account"
     headers = {
         "Authorization": "Bearer " + pytest.token,
         "accept": "application/json"
