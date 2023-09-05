@@ -17,7 +17,8 @@ async def get_hibp_breaches(
     domain: str
 ):
     """
-    Endpoint to get all breaches for a user
+    Endpoint to get breach for a user for a given domain
+    :param domain: Domain to check
     :param UserId email: Used to get the breaches for a user
     :param User current_user: User's data and used for authentication
     :return: Content with the breaches of the user in a JSON format
