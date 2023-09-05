@@ -157,7 +157,7 @@ def test_get_user_non_existing():
     assert get_user(''.join(random.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(len(pytest.token)))) == 401
 
 
-@pytest.mark.run(order=16)
+@pytest.mark.run(order=17)
 def test_update_vault():
     """
     Function to test the update_vault endpoint
@@ -180,7 +180,7 @@ def test_update_vault():
     assert response.status_code == 200
 
 
-@pytest.mark.run(order=17)
+@pytest.mark.run(order=18)
 def test_update_email():
     """
     Function to test the update_email endpoint
@@ -212,7 +212,7 @@ def test_update_email():
     assert login(MOCK_USER2.email, MOCK_USER2.key_hash) == 200
 
 
-@pytest.mark.run(order=18)
+@pytest.mark.run(order=19)
 def test_update_password():
     """
     Function to test the update_password endpoint
@@ -244,7 +244,7 @@ def test_update_password():
 
 
 # test logout
-@pytest.mark.run(order=19)
+@pytest.mark.run(order=20)
 def test_logout():
     """
     Function to test the logout endpoint
@@ -262,7 +262,7 @@ def test_logout():
     assert login(MOCK_USER2.email, MOCK_USER.key_hash) == 200
 
 
-@pytest.mark.run(order=20)
+@pytest.mark.run(order=21)
 def test_delete_user():
     """
     Function to test the delete_user endpoint
