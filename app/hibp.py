@@ -19,6 +19,6 @@ async def get_breach_for_user(email, domain):
     # Get breaches that affect a given account
     breach_data = pyhibp.get_account_breaches(account=email, truncate_response=False)
 
-    reduced_data = [{'Name': breach['Name']} for breach in breach_data if breach.get("Domain", "") in domain.lower()]
+    reduced_data = [{'Name': breach['Name']} for breach in breach_data if breach.get("Domain") and breach["Domain"].lower() in domain.lower()]
 
     return reduced_data
