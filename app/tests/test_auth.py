@@ -27,6 +27,12 @@ API = "https://api-staging.duckpass.ch"
 
 
 def login(username, password):
+    """
+    Function to log in a user
+    :param username: Username used for the login
+    :param password: Password used for the login
+    :return: Status code of the response
+    """
     url = f"{API}/token"
 
     data = {
@@ -50,6 +56,11 @@ def login(username, password):
 
 
 def get_user(token):
+    """
+    Function to get the user's data
+    :param token: Token used to authenticate the user
+    :return: Status code of the response
+    """
     url = f"{API}/get_user"
 
     headers = {
@@ -63,6 +74,9 @@ def get_user(token):
 
 @pytest.mark.run(order=1)
 def test_api_register():
+    """
+    Function to test the register endpoint with a new user
+    """
 
     url = f"{API}/register"
 
@@ -86,6 +100,9 @@ def test_api_register():
 
 @pytest.mark.run(order=1)
 def test_api_register_an_existing_user():
+    """
+    Function to test the register endpoint with an existing user
+    """
 
     url = f"{API}/register"
 
@@ -108,27 +125,43 @@ def test_api_register_an_existing_user():
 
 @pytest.mark.run(order=2)
 def test_api_login():
+    """
+    Function to test the login endpoint with an existing user
+    """
     assert login(MOCK_USER.email, MOCK_USER.key_hash) == 200
 
 
 @pytest.mark.run(order=2)
 def test_api_login_with_bad_credentials():
+    """
+    Function to test the login endpoint with bad credentials
+    """
     assert login(MOCK_USER2.email, MOCK_USER2.key_hash) == 404
 
 
 @pytest.mark.run(order=3)
 def test_get_user():
+    """
+    Function to test the get_user endpoint with a valid token
+    """
     assert get_user(pytest.token) == 200
 
 
 @pytest.mark.run(order=3)
 def test_get_user_non_existing():
+    """
+    Function to test the get_user endpoint with a random token
+    Note that this is the only function tested with bad token, because all the other functions that take a token as
+    parameter are also filtered by the same function as they are entering the API.
+    """
     assert get_user(''.join(random.choice(string.ascii_letters + string.digits + string.punctuation) for _ in range(len(pytest.token)))) == 401
 
 
 @pytest.mark.run(order=4)
 def test_update_vault():
-
+    """
+    Function to test the update_vault endpoint
+    """
     url = f"{API}/update_vault"
 
 
@@ -149,6 +182,9 @@ def test_update_vault():
 
 @pytest.mark.run(order=5)
 def test_update_email():
+    """
+    Function to test the update_email endpoint
+    """
 
     url = f"{API}/update_email"
 
@@ -178,6 +214,9 @@ def test_update_email():
 
 @pytest.mark.run(order=6)
 def test_update_password():
+    """
+    Function to test the update_password endpoint
+    """
 
     url = f"{API}/update_password"
 
@@ -207,6 +246,9 @@ def test_update_password():
 # test logout
 @pytest.mark.run(order=7)
 def test_logout():
+    """
+    Function to test the logout endpoint
+    """
 
     url = f"{API}/logout"
     headers = {
@@ -222,6 +264,9 @@ def test_logout():
 
 @pytest.mark.run(order=8)
 def test_delete_user():
+    """
+    Function to test the delete_user endpoint
+    """
 
     url = f"{API}/delete_account"
     headers = {
