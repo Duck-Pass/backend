@@ -44,7 +44,5 @@ def test_get_breaches_without_email():
 
     response = requests.get(url, params=query_params, headers=headers)
 
-    print(response.text)
-
     assert response.status_code == 404
 
