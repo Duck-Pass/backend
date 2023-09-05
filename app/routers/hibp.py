@@ -13,7 +13,7 @@ router = APIRouter(
 @router.get("/hibp_breaches")
 async def get_hibp_breaches(
     current_user: Annotated[SecureEndpointParams, Depends(protected_endpoints)],
-    email: UserId
+    email: str
 ):
     """
     Endpoint to get all breaches for a user
@@ -22,8 +22,8 @@ async def get_hibp_breaches(
     :return: Content with the breaches of the user in a JSON format
     """
 
-    if not is_valid_email(email.email):
+    if not is_valid_email(email):
         raise HTTPException(status_code=400, detail="Invalid email address")
 
-    json_data = await get_breaches_for_user(email.email)
+    json_data = await get_breaches_for_user(email)
     return Response(content=json.dumps(json_data), media_type="application/json")
