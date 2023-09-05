@@ -5,7 +5,7 @@ MOCK_MASTER_KEY = "k0KvWBh+i/abeV2emfvXf/xn+zKyHLyVbyJ6wBzS6lQ="
 MOCK_SALT = "dCRMeUNqyS391itmSCclAw=="
 MOCK_MASTER_KEY_RESULT = "ukjP00CxTYCFmXyQUmE/dWjQlntEXN/x/CLCl6631dg="
 
-# generate masterkEyhas
+
 def test_generate_master_key(mocker):
     salt_bytes = get_byte_from_base64(MOCK_SALT)
     master_key_bytes = get_byte_from_base64(MOCK_MASTER_KEY_RESULT)
