@@ -41,6 +41,14 @@ class UserAuth(BaseModel):
     symmetric_key_encrypted: str
 
 
+class UserId(BaseModel):
+    """
+    Represents the id of a user
+    """
+
+    email: str
+
+
 class Token(BaseModel):
     """
     Represents the token value and type for a JWT token

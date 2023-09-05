@@ -5,6 +5,7 @@ from ..mail import *
 from ..crypto import *
 from ..templates.mailTemplate import *
 from ..model import *
+from ..utils import is_valid_email
 
 router = APIRouter(
     tags=["User"]
@@ -22,11 +23,10 @@ async def create_new_user(
     :param UserAuth user_auth: User's authentication data (email, password, password confirmation)
     :return: Confirmation message and send email
     """
+    if not is_valid_email(user_auth.email):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email")
 
-    user_data = (user_auth.email,)
-    current_user = select_request(select_user(), user_data)
-
-    if current_user is not None:
+    if check_user_exists(user_auth.email):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
 
     if not user_auth.key_hash == user_auth.key_hash_conf:
@@ -114,6 +114,7 @@ async def update_email(
     :param Vault vault: User's vault
     :return: Confirmation message
     """
+
     if check_user_exists(user_auth.email):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
 
