@@ -6,7 +6,7 @@ from jose import JWTError, jwt
 from .database import *
 from .crypto import *
 from .model import User
-from .utils import bytea_to_text
+from .utils import *
 
 SECRET_KEY = os.environ['SECRET_KEY']  # Key to generate token
 ALGORITHM = os.environ['ALGORITHM']  # Algorithm to generate token
@@ -31,6 +31,9 @@ def get_user_from_db(email: str):
     :param str email: User's email to get from database
     :return: User's data
     """
+
+    if not is_valid_email(email):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email")
 
     user_data = (email,)
     current_user = select_request(select_user(), user_data)
