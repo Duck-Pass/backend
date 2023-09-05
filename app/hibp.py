@@ -4,9 +4,10 @@ import os
 HIBP_API_KEY = os.environ.get("HIBP_API_KEY")
 
 
-async def get_breaches_for_user(email):
+async def get_breach_for_user(email, domain):
     """
-    Get all breaches for a given email
+    Check if there is an existing breach for a given email on a given domain
+    :param str domain: Domain to check
     :param str email: Email to check
     :return: List of breaches
     """
@@ -18,6 +19,6 @@ async def get_breaches_for_user(email):
     # Get breaches that affect a given account
     breach_data = pyhibp.get_account_breaches(account=email, truncate_response=False)
 
-    reduced_data = [{'Name': breach['Name'], 'BreachDate': breach['BreachDate'], 'DataClasses': breach['DataClasses'], 'LogoPath': breach['LogoPath']} for breach in breach_data]
+    reduced_data = [{'Name': breach['Name']} for breach in breach_data if breach.get("Domain", "") in domain.lower()]
 
     return reduced_data
