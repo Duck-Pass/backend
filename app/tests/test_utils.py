@@ -21,6 +21,7 @@ def test_email_regex_not_valid():
     assert not is_valid_email("ducky")
 
 
+@pytest.mark.run(order=24)
 def test_bytea_to_text():
     """
     Test with a bytea value
@@ -30,6 +31,7 @@ def test_bytea_to_text():
     assert result == 'Hello, World!'
 
 
+@pytest.mark.run(order=25)
 def test_empty_bytea_to_text():
     """
     Test with an empty bytea value
