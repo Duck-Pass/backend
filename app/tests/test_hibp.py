@@ -28,15 +28,11 @@ def test_get_breaches_without_email():
 
     url = f"{pytest.API}/hibp_pastes"
 
-    query_params = {
-        "email": "DUCKY",
-    }
-
     headers = {
         "Authorization": "Bearer " + pytest.token,
         "accept": "application/json",
     }
 
-    response = requests.get(url, params=query_params, headers=headers)
+    response = requests.get(url, headers=headers)
 
     assert response.status_code == 404
