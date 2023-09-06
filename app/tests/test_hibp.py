@@ -3,24 +3,20 @@ import requests
 
 
 @pytest.mark.run(order=14)
-def test_get_breaches():
+def test_get_breaches_with_a_good_email_without_breaches():
     """
     Function to test the get breaches endpoint
+    Note : We will only test this endpoint due to rate limiting by the HIBP API
     """
 
     url = f"{pytest.API}/hibp_breaches"
-
-    query_params = {
-        "email": "test@duckpass.ch",
-        "domain": "duckpass.ch"
-    }
 
     headers = {
         "Authorization": "Bearer " + pytest.token,
         "accept": "application/json",
     }
 
-    response = requests.get(url, params=query_params, headers=headers)
+    response = requests.get(url, headers=headers)
     assert response.status_code == 200
 
 
@@ -34,7 +30,6 @@ def test_get_breaches_without_email():
 
     query_params = {
         "email": "DUCKY",
-        "domain": "duckpass.ch"
     }
 
     headers = {
@@ -45,4 +40,3 @@ def test_get_breaches_without_email():
     response = requests.get(url, params=query_params, headers=headers)
 
     assert response.status_code == 404
-

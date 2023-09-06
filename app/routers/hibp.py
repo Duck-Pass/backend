@@ -13,22 +13,31 @@ router = APIRouter(
 @router.get("/hibp_breaches")
 async def get_hibp_breaches(
     current_user: Annotated[SecureEndpointParams, Depends(protected_endpoints)],
-    email: str,
-    domain: str
 ):
     """
     Endpoint to get breach for a user for a given domain
-    :param domain: Domain to check
-    :param UserId email: Used to get the breaches for a user
-    :param User current_user: User's data and used for authentication
+    :return: Content with the breaches of the user in a JSON format
+    """
+
+    json_data = await get_breach_for_user(current_user.email)
+    return Response(content=json.dumps(json_data), media_type="application/json")
+
+
+@router.get("/hibp_password")
+async def get_hibp_breaches_password(
+    current_user: Annotated[SecureEndpointParams, Depends(protected_endpoints)],
+    email: str,
+    hash_begin: str
+):
+    """
+    Endpoint to get breach for a user for a given domain
+    :param str email: Used to get the breaches for a user
+    :param str hash_begin: Beginning of the hash of the password
     :return: Content with the breaches of the user in a JSON format
     """
 
     if not is_valid_email(email):
         raise HTTPException(status_code=400, detail="Invalid email address")
 
-    json_data = await get_breach_for_user(email, domain)
-    if json_data:
-        return {"message": "Breaches found"}
-    else:
-        return {"message": "No breaches found"}
+    breached_hashes = await get_breach_for_password(email, hash_begin.upper())
+    return breached_hashes

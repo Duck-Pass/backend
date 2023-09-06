@@ -1,21 +1,22 @@
-import pyhibp
+import hibpwned
 import os
 
-pyhibp.set_api_key(key=os.environ.get("HIBP_API_KEY"))
-pyhibp.set_user_agent(ua="duckpass")
+API_KEY = os.environ.get("HIBP_API_KEY")
+USER_AGENT = os.environ.get("USER_AGENT")
 
 
-async def get_breach_for_user(email, domain):
-    """
-    Check if there is an existing breach for a given email on a given domain
-    :param str domain: Domain to check
-    :param str email: Email to check
-    :return: List of breaches
-    """
+async def get_breach_for_user(email):
 
-    # Get breaches that affect a given account
-    breach_data = pyhibp.get_account_breaches(account=email, truncate_response=False)
+    hibp = hibpwned.Pwned(email, USER_AGENT, API_KEY)
+    all_my_breaches = hibp.search_all_breaches()
+    if all_my_breaches == 404:
+        return []
+    return [{'Name': breach['Name'], 'Domain': breach['Domain'], 'BreachDate': breach['BreachDate'], 'DataClasses': breach['DataClasses'], 'LogoPath': breach['LogoPath']} for breach in all_my_breaches]
 
-    reduced_data = [{'Name': breach['Name']} for breach in breach_data if breach.get("Domain") and breach["Domain"].lower() in domain.lower()]
 
-    return reduced_data
+async def get_breach_for_password(email, hash_begin):
+
+    hibp = hibpwned.Pwned(email, USER_AGENT, API_KEY)
+    hashes = hibp.search_hashes(hash_begin)
+    return hashes
+
