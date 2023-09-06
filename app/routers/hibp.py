@@ -26,18 +26,16 @@ async def get_hibp_breaches(
 @router.get("/hibp_password")
 async def get_hibp_breaches_password(
     current_user: Annotated[SecureEndpointParams, Depends(protected_endpoints)],
-    email: str,
     hash_begin: str
 ):
     """
     Endpoint to get breach for a user for a given domain
-    :param str email: Used to get the breaches for a user
     :param str hash_begin: Beginning of the hash of the password
     :return: Content with the breaches of the user in a JSON format
     """
 
-    if not is_valid_email(email):
+    if not is_valid_email(current_user.email):
         raise HTTPException(status_code=400, detail="Invalid email address")
 
-    breached_hashes = await get_breach_for_password(email, hash_begin.upper())
+    breached_hashes = await get_breach_for_password(current_user.email, hash_begin.upper())
     return breached_hashes
