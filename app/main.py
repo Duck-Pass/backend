@@ -1,12 +1,30 @@
-from typing import Union
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from .hibp import *
+from .routers import auth, hibp, twoFactor, user
 
-app = FastAPI()
+SITE = os.environ.get('SITE')
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+app = FastAPI(title="DuckPass API",
+              description="API for the DuckPass password manager",
+              version="1.0.0",
+              license_info={
+                  "name": "GPLv3",
+                  "identifier": "GPL-3.0-only",
+              })    # Create FastAPI instance
+
+# Add CORS middleware for client requests to API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Routers of the API endpoints
+app.include_router(user.router)
+app.include_router(auth.router)
+app.include_router(twoFactor.router)
+app.include_router(hibp.router)
